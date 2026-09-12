@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#62a0ea"/>
+      <stop offset="1" stop-color="#1c71d8"/>
+    </linearGradient>
+  </defs>
+  <!-- GNOME-style rounded tile -->
+  <rect x="8" y="8" width="112" height="112" rx="22" fill="url(#bg)"/>
+  <rect x="8" y="8" width="112" height="56" rx="22" fill="#ffffff" opacity="0.08"/>
+  <!-- Dagaz rune (ᛞ, "day"): two verticals joined by a crossing X -->
+  <g fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M40 32 V96"/>
+    <path d="M88 32 V96"/>
+    <path d="M40 32 L88 96"/>
+    <path d="M40 96 L88 32"/>
+  </g>
+</svg>

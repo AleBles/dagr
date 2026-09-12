@@ -1,0 +1,52 @@
+{
+  "id": "dev.ables.Dagr",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "50",
+  "sdk": "org.gnome.Sdk",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable"
+  ],
+  "command": "dagr",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--share=network"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin",
+    "env": {
+      "CARGO_HOME": "/run/build/dagr/cargo",
+      "CARGO_NET_OFFLINE": "true"
+    }
+  },
+  "modules": [
+    {
+      "name": "dagr",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cargo --offline build --release --locked --jobs \"${FLATPAK_BUILDER_N_JOBS:-4}\"",
+        "install -Dm755 target/release/dagr /app/bin/dagr",
+        "install -Dm644 data/dev.ables.Dagr.desktop /app/share/applications/dev.ables.Dagr.desktop",
+        "install -Dm644 data/dev.ables.Dagr.metainfo.xml /app/share/metainfo/dev.ables.Dagr.metainfo.xml",
+        "install -Dm644 data/icons/hicolor/scalable/apps/dev.ables.Dagr.svg /app/share/icons/hicolor/scalable/apps/dev.ables.Dagr.svg",
+        "install -Dm644 data/icons/hicolor/symbolic/apps/dev.ables.Dagr-symbolic.svg /app/share/icons/hicolor/symbolic/apps/dev.ables.Dagr-symbolic.svg"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "..",
+          "skip": [
+            ".git",
+            ".flatpak-builder",
+            "build-aux/.flatpak-builder",
+            "build-aux/build-dir",
+            "target"
+          ]
+        },
+        "cargo-sources.json"
+      ]
+    }
+  ]
+}

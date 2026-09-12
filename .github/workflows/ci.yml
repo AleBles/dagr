@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: fmt · clippy · test
+    runs-on: ubuntu-latest
+    # Ubuntu's GTK/libadwaita are too old for the v4_18 / v1_7 bindings this
+    # app uses; Fedora tracks GNOME closely, like the development machine.
+    container: fedora:latest
+    steps:
+      - name: Install toolchain and GTK
+        run: |
+          dnf install -y --setopt=install_weak_deps=False \
+            git gcc rust cargo rustfmt clippy gtk4-devel libadwaita-devel
+          cargo --version && pkg-config --modversion gtk4 libadwaita-1
+
+      - uses: actions/checkout@v4
+
+      - name: Cache cargo registry and build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Build
+        run: cargo build --locked
+
+      - name: Test
+        run: cargo test --locked -- --nocapture
+
+  flatpak:
+    name: flatpak bundle
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check vendored cargo sources are current
+        run: |
+          python3 build-aux/generate-cargo-sources.py -o /tmp/cargo-sources.json
+          diff -q /tmp/cargo-sources.json build-aux/cargo-sources.json \
+            || { echo "::error::build-aux/cargo-sources.json is stale; run build-aux/generate-cargo-sources.py"; exit 1; }
+
+      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: dagr.flatpak
+          manifest-path: build-aux/dev.ables.Dagr.json
+          cache-key: flatpak-builder-${{ github.sha }}
+          upload-artifact: true

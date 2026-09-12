@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Dagr
+Comment=A simple, priority-ordered task list
+Exec=dagr
+Icon=dev.ables.Dagr
+Terminal=false
+Type=Application
+Categories=GTK;Office;ProjectManagement;
+Keywords=todo;tasks;list;
+StartupNotify=true
+DBusActivatable=false

@@ -1,0 +1,25 @@
+/* Done tasks sink to the bottom and fade out. Priority dots are drawn in code
+   (see ui/colors.rs) because their colors are user-defined. */
+row.done label {
+  text-decoration: line-through;
+}
+row.done {
+  opacity: 0.55;
+}
+
+/* Drag-and-drop reordering (see ui/reorder.rs). */
+.drag-handle {
+  opacity: 0.45;
+}
+.drag-handle:hover {
+  opacity: 1;
+}
+row.dragging {
+  opacity: 0.4;
+}
+row.drop-above {
+  box-shadow: inset 0 3px 0 0 var(--accent-bg-color);
+}
+row.drop-below {
+  box-shadow: inset 0 -3px 0 0 var(--accent-bg-color);
+}
