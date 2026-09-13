@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+# Needed so the bundle can be attached to the GitHub Release.
+permissions:
+  contents: write
+
+jobs:
+  flatpak-bundle:
+    name: Flatpak bundle
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check vendored cargo sources are current
+        run: |
+          python3 build-aux/generate-cargo-sources.py -o /tmp/cargo-sources.json
+          diff -q /tmp/cargo-sources.json build-aux/cargo-sources.json \
+            || { echo "::error::build-aux/cargo-sources.json is stale; run build-aux/generate-cargo-sources.py"; exit 1; }
+
+      - name: Build the Flatpak bundle
+        uses: flathub-infra/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: dagr.flatpak
+          manifest-path: build-aux/dev.ables.Dagr.json
+          cache-key: flatpak-builder-${{ github.sha }}
+
+      - name: Attach the bundle to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dagr.flatpak
+          fail_on_unmatched_files: true
+          generate_release_notes: true

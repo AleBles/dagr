@@ -67,6 +67,18 @@ install -Dm644 data/dev.ables.Dagr.desktop ~/.local/share/applications/
 ```
 
 ### Flatpak
+Every tagged release attaches a sandboxed `dagr.flatpak`
+bundle, built by CI. Download it from the
+[latest release](https://github.com/alebles/dagr/releases/latest) and install:
+
+```bash
+# the flathub remote provides the GNOME runtime the bundle needs
+flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install --user dagr.flatpak
+flatpak run dev.ables.Dagr
+```
+
+To build the Flatpak yourself instead:
 
 ```bash
 flatpak install --user flathub org.gnome.Sdk//50 \
@@ -76,7 +88,8 @@ flatpak run org.flatpak.Builder --user --install --force-clean \
 flatpak run dev.ables.Dagr
 ```
 
-Crates are vendored for the offline sandbox build in `build-aux/cargo-sources.json`; regenerate it after changing `Cargo.lock` with `build-aux/generate-cargo-sources.py`.
+Crates are vendored for the offline sandbox build in `build-aux/cargo-sources.json`;
+regenerate it after changing `Cargo.lock` with `build-aux/generate-cargo-sources.py`.
 
 ## Usage
 
