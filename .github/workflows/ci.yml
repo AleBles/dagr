@@ -54,7 +54,7 @@ jobs:
           diff -q /tmp/cargo-sources.json build-aux/cargo-sources.json \
             || { echo "::error::build-aux/cargo-sources.json is stale; run build-aux/generate-cargo-sources.py"; exit 1; }
 
-      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@v6
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: dagr.flatpak
           manifest-path: build-aux/dev.ables.Dagr.json
