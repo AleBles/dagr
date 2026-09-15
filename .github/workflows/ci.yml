@@ -22,7 +22,7 @@ jobs:
             git gcc rust cargo rustfmt clippy gtk4-devel libadwaita-devel
           cargo --version && pkg-config --modversion gtk4 libadwaita-1
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Cache cargo registry and build
         uses: Swatinem/rust-cache@v2
@@ -46,7 +46,7 @@ jobs:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
       options: --privileged
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check vendored cargo sources are current
         run: |
