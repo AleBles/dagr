@@ -12,7 +12,7 @@
   <a href="https://dagr.bles.nu"><img src="https://img.shields.io/badge/site-dagr.bles.nu-d97706.svg" alt="Site"></a>
 </p>
 
-A tiny, keyboard-first task list for Linux. One window, one priority-ordered list, and everything a single click away - plus a built-in MCP server, so an AI assistant can do anything you can.
+A tiny, keyboard-first task list for Linux. One window, one priority-ordered list, and everything a single click away - plus a background service that lets an AI assistant, or your desktop, do anything you can.
 
 > _"Skinfaxi they name the steed that draws the shining day over mankind — brightest of horses he seems to men, and ever his mane is aflame with light."_
 > — Vafþrúðnismál, of the horse that bears Dagr across the sky
@@ -28,57 +28,56 @@ A tiny, keyboard-first task list for Linux. One window, one priority-ordered lis
 - **Type to add** - the entry is focused on launch; a leading `!`, `!!`, `!!!` bumps the new task's priority.
 - **Undo, not confirm** - deletes and "clear completed" drop a toast with Undo instead of asking first.
 - **Adjustable** - turn priorities off entirely, choose the sort order and the default priority, all in Preferences.
-- **AI-native** - the same binary is an MCP server over stdio or local HTTP, sharing one database with the open window.
+- **AI-native** - a background service hosts an MCP endpoint over local HTTP, sharing one database with the open window and outliving it.
+- **Scriptable from your desktop** - the same service answers a Unix socket, which is how the [launcher plugin](https://github.com/alebles/dms-spotlight-tasks) adds tasks from a spotlight search.
 - **Native GNOME look** - GTK 4 + libadwaita, following the system light/dark style and accent color. Runs on any Linux desktop (developed on Hyprland), no GNOME shell required.
 - **Local and private** - a single SQLite file in your data directory. No account, no cloud, no telemetry.
 
 ## Install
 
-Build from source with a Rust toolchain and the GTK 4 / libadwaita development files.
+Dagr is **not on Flathub**, and not in any distro repository. Releases live on GitHub.
 
-**Fedora**
+### Flatpak
+
+Every tagged release attaches a sandboxed `dagr.flatpak` bundle built by CI. Download it from the [latest release](https://github.com/alebles/dagr/releases/latest) and install the file directly:
 
 ```bash
-sudo dnf install rust cargo gtk4-devel libadwaita-devel
+# Flathub is only used for the GNOME runtime the bundle needs, not for Dagr itself
+flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install --user dagr.flatpak
+flatpak run dev.ables.Dagr
+```
+
+**A Flatpak install puts no `dagr` command on your PATH.** Worth knowing before anything else here makes sense: every `dagr …` line below assumes one exists. Make one:
+
+```bash
+mkdir -p ~/.local/bin
+printf '#!/bin/sh\nexec flatpak run dev.ables.Dagr "$@"\n' > ~/.local/bin/dagr
+chmod +x ~/.local/bin/dagr
+```
+
+Tasks live in `~/.var/app/dev.ables.Dagr/data/dagr/dagr.db`. Note that a source build uses `~/.local/share/dagr/dagr.db` instead, so running both gives you two separate lists - `dagr status` prints which one is being served.
+
+### From source
+
+Needs a Rust toolchain and the GTK 4 / libadwaita development files.
+
+```bash
+sudo dnf install rust cargo gtk4-devel libadwaita-devel   # Fedora
+sudo apt install cargo libgtk-4-dev libadwaita-1-dev      # Debian / Ubuntu
+sudo pacman -S rust gtk4 libadwaita                       # Arch
+
 cargo run --release
 ```
 
-**Debian / Ubuntu**
-
-```bash
-sudo apt install cargo libgtk-4-dev libadwaita-1-dev
-cargo run --release
-```
-
-**Arch**
-
-```bash
-sudo pacman -S rust gtk4 libadwaita
-cargo run --release
-```
-
-Needs GTK ≥ 4.18 and libadwaita ≥ 1.7 (the versions the bindings are gated to; the code itself only uses APIs from GTK 4.12 / libadwaita 1.5). Tasks live in `~/.local/share/dagr/dagr.db`.
-
-To install a launcher entry:
+Needs GTK ≥ 4.18 and libadwaita ≥ 1.7 (the versions the bindings are gated to; the code itself only uses APIs from GTK 4.12 / libadwaita 1.5). To put `dagr` on your PATH with a launcher entry:
 
 ```bash
 cargo install --path .
 install -Dm644 data/dev.ables.Dagr.desktop ~/.local/share/applications/
 ```
 
-### Flatpak
-Every tagged release attaches a sandboxed `dagr.flatpak`
-bundle, built by CI. Download it from the
-[latest release](https://github.com/alebles/dagr/releases/latest) and install:
-
-```bash
-# the flathub remote provides the GNOME runtime the bundle needs
-flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user dagr.flatpak
-flatpak run dev.ables.Dagr
-```
-
-To build the Flatpak yourself instead:
+### Building the Flatpak yourself
 
 ```bash
 flatpak install --user flathub org.gnome.Sdk//50 \
@@ -88,8 +87,7 @@ flatpak run org.flatpak.Builder --user --install --force-clean \
 flatpak run dev.ables.Dagr
 ```
 
-Crates are vendored for the offline sandbox build in `build-aux/cargo-sources.json`;
-regenerate it after changing `Cargo.lock` with `build-aux/generate-cargo-sources.py`.
+Crates are vendored for the offline sandbox build in `build-aux/cargo-sources.json`; regenerate it after changing `Cargo.lock` with `build-aux/generate-cargo-sources.py`.
 
 ## Usage
 
@@ -109,24 +107,56 @@ The window opens with the entry focused. Type a task, press Enter, and keep goin
 
 **Preferences** covers what to make adjustable: switch priorities on or off, choose the sort order (priority, oldest, newest, or alphabetical), set the default priority for new tasks, and manage the priority levels themselves.
 
+## The background service
+
+`dagr serve` runs without a window. It hosts the MCP endpoint and answers a Unix socket at `$XDG_RUNTIME_DIR/dagr/dagr.sock`. Everything below - AI access and desktop integration - goes through it, so set it up first.
+
+The window starts one on demand if none is running, and it outlives the window being closed - but not a logout or a reboot. To have it come back on its own, run:
+
+```bash
+dagr setup
+```
+
+That prints the exact steps for your install, because they differ: a Flatpak needs the PATH shim above and a different `ExecStart`. What it amounts to is a systemd user service:
+
+```bash
+mkdir -p ~/.config/systemd/user
+dagr serve --print-unit > ~/.config/systemd/user/dagr.service
+systemctl --user enable --now dagr
+
+dagr status        # which database, the MCP url, and whether anything is answering
+```
+
+`dagr status` decides by connecting to the socket rather than by looking for a status file, so it stays honest after a hard kill - which is what stopping the Flatpak service is, since `--die-with-parent` leaves no chance to clean up.
+
 ## AI access (MCP)
 
-`dagr --mcp` speaks the [Model Context Protocol](https://modelcontextprotocol.io) over stdio instead of opening a window, on the same database - so changes show up in an open window within a second.
+Dagr speaks the [Model Context Protocol](https://modelcontextprotocol.io) over Streamable HTTP at `http://127.0.0.1:<port>/mcp`, bound to loopback with no authentication. There is one MCP server and the background service hosts it, so it keeps working once you close the window.
 
 Every action in the app is a tool: `list_tasks`, `add_task`, `update_task`, `delete_task`, `clear_completed`, `list_priorities`, `add_priority`, `update_priority`, `reorder_priorities`, `delete_priority`, `get_settings`, `update_settings`. Priorities can be given by name or id.
 
 This repo ships a project-scoped `.mcp.json`, so opening Claude Code here just works. From anywhere:
 
 ```bash
-cargo install --path .
-claude mcp add --scope user dagr -- dagr --mcp
-```
-
-**HTTP mode** - Preferences → AI access starts a Streamable HTTP endpoint on `http://127.0.0.1:<port>/mcp` for as long as the window is open, bound to loopback with no authentication. Register it with:
-
-```bash
 claude mcp add --transport http dagr http://127.0.0.1:7331/mcp
 ```
+
+The endpoint can be switched off, and its port changed, in Preferences → AI access.
+
+## Desktop integration
+
+The service's Unix socket is there for desktop tooling that should not be poking at the database. [Spotlight Tasks](https://github.com/alebles/dms-spotlight-tasks) is one: a [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) launcher plugin that adds and completes tasks from a spotlight search.
+
+It speaks one JSON object per line, both directions. Method names match the MCP tools:
+
+```jsonc
+{"event":"hello","protocol":1,"version":"0.2.0","db":"/home/…/dagr.db"}
+{"id":1,"method":"list_tasks","params":{"include_done":false}}
+{"id":1,"ok":true,"result":{"version":1235,"tasks":[…],"priorities":[…],"settings":{…}}}
+{"event":"changed","version":1236}
+```
+
+`subscribe` turns on `changed` notifications, including for writes made straight to the database by the window. `list_tasks` returns tasks, priorities and settings together, because that is what a client needs to draw a list in one round trip.
 
 ## Development
 
@@ -136,7 +166,14 @@ cargo clippy --all-targets -- -D warnings # what CI enforces
 cargo fmt --check
 ```
 
-Integration tests in `tests/` drive the real binary over MCP (stdio and HTTP) and need no display. CI runs fmt, clippy, and the tests on every push, and builds a Flatpak bundle.
+Integration tests in `tests/` drive a real `dagr serve` over its socket and over MCP, and need no display. CI runs fmt, clippy, and the tests on every push, and builds a Flatpak bundle.
+
+Schema changes are made in place - there are no migrations before the first release. To start over, stop the service first, since it holds the database open:
+
+```bash
+systemctl --user stop dagr
+rm ~/.local/share/dagr/dagr.db        # or ~/.var/app/dev.ables.Dagr/data/dagr/dagr.db
+```
 
 ## License
 

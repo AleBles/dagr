@@ -9,6 +9,7 @@
   "command": "dagr",
   "finish-args": [
     "--share=ipc",
+    "--filesystem=xdg-run/dagr:create",
     "--socket=fallback-x11",
     "--socket=wayland",
     "--device=dri",
@@ -28,6 +29,7 @@
       "build-commands": [
         "cargo --offline build --release --locked --jobs \"${FLATPAK_BUILDER_N_JOBS:-4}\"",
         "install -Dm755 target/release/dagr /app/bin/dagr",
+        "install -Dm644 data/dagr.service /app/share/dagr/dagr.service",
         "install -Dm644 data/dev.ables.Dagr.desktop /app/share/applications/dev.ables.Dagr.desktop",
         "install -Dm644 data/dev.ables.Dagr.metainfo.xml /app/share/metainfo/dev.ables.Dagr.metainfo.xml",
         "install -Dm644 data/icons/hicolor/scalable/apps/dev.ables.Dagr.svg /app/share/icons/hicolor/scalable/apps/dev.ables.Dagr.svg",

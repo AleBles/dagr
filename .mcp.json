@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "dagr": {
-      "command": "cargo",
-      "args": ["run", "--quiet", "--", "--mcp"]
+      "type": "http",
+      "url": "http://127.0.0.1:7331/mcp"
     }
   }
 }

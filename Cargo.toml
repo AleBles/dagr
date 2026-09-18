@@ -1,6 +1,6 @@
 [package]
 name = "dagr"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "A simple, priority-ordered task list with a built-in MCP server"
 
@@ -15,11 +15,19 @@ schemars = "1"
 rmcp = { version = "3", features = [
     "server",
     "macros",
-    "transport-io",
     "transport-streamable-http-server",
     "schemars",
 ] }
-tokio = { version = "1", features = ["rt", "macros", "io-std", "net"] }
+tokio = { version = "1", features = [
+    "rt",
+    "macros",
+    "io-std",
+    "io-util",
+    "net",
+    "sync",
+    "time",
+    "signal",
+] }
+libc = "0.2"
 tokio-util = "0.7"
 axum = "0.8"
-async-channel = "2"

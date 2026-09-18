@@ -13,6 +13,7 @@ use gtk::{gio, glib};
 
 use crate::db::Db;
 use crate::mcp_http;
+use crate::serve;
 use crate::settings::Settings;
 use crate::task::{self, Priority, Task};
 use crate::ui::{preferences, task_row};
@@ -30,10 +31,9 @@ pub struct Ctx {
     settings: RefCell<Settings>,
     /// Called after every render, so an open dialog can follow along.
     refresh_listener: RefCell<Option<Box<dyn Fn()>>>,
-    /// The in-app HTTP MCP server, while the setting is on.
-    mcp_server: RefCell<Option<mcp_http::Handle>>,
+    /// Last known state of the MCP endpoint, which the background service
+    /// owns. Refreshed on the same tick that watches for outside changes.
     mcp_status: RefCell<mcp_http::Status>,
-    mcp_status_tx: async_channel::Sender<(u16, mcp_http::Status)>,
     /// Last seen SQLite `data_version`, to detect commits by other processes.
     seen_data_version: Cell<i64>,
     entry: gtk::Entry,
@@ -131,7 +131,6 @@ pub fn build_window(app: &adw::Application, db: Db) -> adw::ApplicationWindow {
         .content(&toasts)
         .build();
 
-    let (mcp_status_tx, mcp_status_rx) = async_channel::unbounded();
     let ctx = Rc::new(Ctx {
         window,
         db,
@@ -139,9 +138,7 @@ pub fn build_window(app: &adw::Application, db: Db) -> adw::ApplicationWindow {
         priorities: RefCell::new(Vec::new()),
         settings: RefCell::new(Settings::default()),
         refresh_listener: RefCell::new(None),
-        mcp_server: RefCell::new(None),
         mcp_status: RefCell::new(mcp_http::Status::Stopped),
-        mcp_status_tx,
         seen_data_version: Cell::new(0),
         entry,
         list,
@@ -150,7 +147,6 @@ pub fn build_window(app: &adw::Application, db: Db) -> adw::ApplicationWindow {
         toasts,
     });
     ctx.wire_up();
-    ctx.listen_for_mcp_status(mcp_status_rx);
     ctx.refresh();
     ctx.window.clone()
 }
@@ -218,48 +214,15 @@ impl Ctx {
         );
     }
 
-    /// Forwards status messages from the server thread onto the main loop.
-    fn listen_for_mcp_status(
-        self: &Rc<Self>,
-        rx: async_channel::Receiver<(u16, mcp_http::Status)>,
-    ) {
-        let weak = Rc::downgrade(self);
-        glib::spawn_future_local(async move {
-            while let Ok((port, status)) = rx.recv().await {
-                let Some(ctx) = weak.upgrade() else { break };
-                // Ignore stragglers from a server that has since been replaced.
-                let current = ctx.mcp_server.borrow().as_ref().map(|h| h.port());
-                if current.is_some_and(|p| p != port) {
-                    continue;
-                }
-                *ctx.mcp_status.borrow_mut() = status;
-                ctx.notify_refresh_listener();
-            }
-        });
-    }
-
-    /// Starts, stops or restarts the HTTP MCP server to match the settings.
-    fn sync_mcp_server(&self) {
-        let wanted = {
-            let s = self.settings.borrow();
-            s.mcp_http_enabled.then_some(s.mcp_http_port)
-        };
-        let mut slot = self.mcp_server.borrow_mut();
-        let running = slot.as_ref().map(|h| h.port());
-        if running == wanted {
+    /// The MCP endpoint lives in the background service now, so make sure one
+    /// is running when the setting asks for it. Nothing is stopped here: the
+    /// service is shared, and it outliving this window is the entire point.
+    fn ensure_service_running(&self) {
+        if !self.settings.borrow().mcp_http_enabled {
             return;
         }
-        if let Some(handle) = slot.take() {
-            handle.stop();
-            *self.mcp_status.borrow_mut() = mcp_http::Status::Stopped;
-        }
-        if let Some(port) = wanted {
-            *slot = Some(mcp_http::start(
-                port,
-                Db::default_path(),
-                self.mcp_status_tx.clone(),
-            ));
-            *self.mcp_status.borrow_mut() = mcp_http::Status::Starting;
+        if let Err(err) = serve::ensure_running() {
+            eprintln!("dagr: could not start the background service: {err:#}");
         }
     }
 
@@ -268,10 +231,17 @@ impl Ctx {
     }
 
     fn poll_external_changes(self: &Rc<Self>) {
-        let Ok(version) = self.db.data_version() else {
-            return;
-        };
-        if self.seen_data_version.replace(version) != version {
+        let mut stale = false;
+        if let Ok(version) = self.db.data_version() {
+            stale |= self.seen_data_version.replace(version) != version;
+        }
+        // The service can start, stop or fail without touching the database.
+        let status = serve::mcp_status();
+        if *self.mcp_status.borrow() != status {
+            *self.mcp_status.borrow_mut() = status;
+            stale = true;
+        }
+        if stale {
             self.refresh();
         }
     }
@@ -414,7 +384,7 @@ impl Ctx {
             Ok(tasks) => *self.tasks.borrow_mut() = tasks,
             Err(err) => self.report(err),
         }
-        self.sync_mcp_server();
+        self.ensure_service_running();
         self.render();
     }
 

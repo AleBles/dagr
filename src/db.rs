@@ -1,12 +1,17 @@
 //! SQLite persistence. Two tables, one connection, plain synchronous calls —
 //! the data is small and every call finishes in microseconds.
 //!
-//! Pre-release: schema changes are made in place, no migrations. Delete
-//! `~/.local/share/dagr/dagr.db` after changing the schema.
+//! Pre-release: schema changes are made in place, no migrations. To start
+//! over, stop the background service first, then delete the file:
 //!
-//! The GUI and the MCP server (`dagr --mcp`) are separate processes sharing
-//! this file, so the database runs in WAL mode and readers poll
-//! `data_version` to notice each other's commits.
+//! ```text
+//! systemctl --user stop dagr      # it holds the database open
+//! rm ~/.local/share/dagr/dagr.db
+//! ```
+//!
+//! The window and `dagr serve` are separate processes sharing this file, so
+//! the database runs in WAL mode and readers poll `data_version` to notice
+//! each other's commits.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};

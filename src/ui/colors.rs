@@ -3,17 +3,7 @@
 use adw::prelude::*;
 use gtk::gdk;
 
-/// GNOME palette colors handed to newly created priorities, in turn.
-pub const PALETTE: [&str; 8] = [
-    "#9141ac", // purple
-    "#2ec27e", // green
-    "#f5c211", // yellow
-    "#986a44", // brown
-    "#1c71d8", // blue
-    "#c01c28", // red
-    "#e66100", // orange
-    "#5e5c64", // grey
-];
+pub use crate::task::PALETTE;
 
 pub fn parse(color: &str) -> gdk::RGBA {
     gdk::RGBA::parse(color).unwrap_or_else(|_| gdk::RGBA::new(0.6, 0.6, 0.6, 1.0))

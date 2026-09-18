@@ -1,14 +1,17 @@
-//! Boots the in-app HTTP MCP server on a random port, performs the MCP
-//! handshake over a raw TCP socket, and checks it shuts down cleanly.
+//! The MCP endpoint, exercised the way a real client reaches it: against a
+//! running `dagr serve`, over TCP.
+//!
+//! The previous version of this test called into the library directly, which
+//! meant the path users actually take — service starts, binds, publishes its
+//! url — was never covered.
 
 mod common;
 
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use common::*;
-use dagr::mcp_http::{self, Status};
 
 /// One HTTP/1.1 POST to `/mcp`; returns the full raw response.
 fn post(port: u16, body: &str, host: &str) -> String {
@@ -29,31 +32,10 @@ fn post(port: u16, body: &str, host: &str) -> String {
     response
 }
 
-fn wait_for_running(rx: &async_channel::Receiver<(u16, Status)>) -> u16 {
-    loop {
-        let (_, status) = rx
-            .recv_blocking()
-            .expect("status channel closed before Running");
-        match status {
-            Status::Running { url } => {
-                return url
-                    .trim_start_matches("http://127.0.0.1:")
-                    .trim_end_matches("/mcp")
-                    .parse()
-                    .expect("port in url");
-            }
-            Status::Failed(err) => panic!("server failed to start: {err}"),
-            Status::Starting | Status::Stopped => {}
-        }
-    }
-}
-
 #[test]
-fn http_server_serves_mcp_and_stops_on_drop() {
-    let dir = TempDir::new("http");
-    let (tx, rx) = async_channel::unbounded();
-    let handle = mcp_http::start(0, dir.0.join("dagr.db"), tx);
-    let port = wait_for_running(&rx);
+fn the_service_serves_mcp() {
+    let service = Service::start_with_mcp("http");
+    let port = service.mcp_port();
 
     let init = post(port, initialize_request(), &format!("127.0.0.1:{port}"));
     assert!(
@@ -64,38 +46,97 @@ fn http_server_serves_mcp_and_stops_on_drop() {
         init.contains(r#""name":"dagr""#),
         "no serverInfo in:\n{init}"
     );
+}
 
-    // DNS-rebinding guard: a foreign Host header is refused.
+#[test]
+fn refuses_a_forged_host_header() {
+    // DNS-rebinding guard: this is what stops a web page in your browser from
+    // driving the endpoint, and it matters more now that it is always on.
+    let service = Service::start_with_mcp("http-forged");
+    let port = service.mcp_port();
+
     let forged = post(port, initialize_request(), "evil.example");
     assert!(
         forged.starts_with("HTTP/1.1 403"),
         "expected 403, got:\n{forged}"
     );
-
-    handle.stop();
-    // Give the runtime a moment to release the socket, then it must be closed.
-    let mut closed = false;
-    for _ in 0..50 {
-        if TcpStream::connect(("127.0.0.1", port)).is_err() {
-            closed = true;
-            break;
-        }
-        std::thread::sleep(Duration::from_millis(100));
-    }
-    assert!(
-        closed,
-        "port {port} still accepting connections after stop()"
-    );
 }
 
 #[test]
-fn http_server_reports_a_busy_port() {
+fn stops_listening_when_the_service_stops() {
+    let mut service = Service::start_with_mcp("http-stop");
+    let port = service.mcp_port();
+    assert!(TcpStream::connect(("127.0.0.1", port)).is_ok());
+
+    service.stop();
+
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while Instant::now() < deadline {
+        if TcpStream::connect(("127.0.0.1", port)).is_err() {
+            return;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    panic!("port {port} still accepting connections after the service stopped");
+}
+
+#[test]
+fn reports_a_busy_port_instead_of_retrying_forever() {
     let blocker = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
     let port = blocker.local_addr().unwrap().port();
-    let dir = TempDir::new("http-busy");
-    let (tx, rx) = async_channel::unbounded();
-    let _handle = mcp_http::start(port, dir.0.join("dagr.db"), tx);
-    let (reported_port, status) = rx.recv_blocking().unwrap();
-    assert_eq!(reported_port, port);
-    assert!(matches!(status, Status::Failed(_)), "got {status:?}");
+
+    let service = Service::start("http-busy");
+    let mut client = service.connect();
+    client.read(); // hello
+    client.ok(
+        "update_settings",
+        serde_json::json!({"mcp_http_enabled": true, "mcp_http_port": port}),
+    );
+
+    // The failure lands in the status file, which is what Preferences reads.
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let info: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(service.info_path()).unwrap()).unwrap();
+        if let Some(message) = info["mcp_error"].as_str() {
+            assert!(
+                message.contains(&port.to_string()),
+                "unhelpful error: {message}"
+            );
+            assert!(info["mcp_http"].is_null());
+            return;
+        }
+        assert!(Instant::now() < deadline, "no failure reported: {info}");
+        std::thread::sleep(Duration::from_millis(50));
+    }
+}
+
+#[test]
+fn switching_the_setting_starts_and_stops_the_endpoint() {
+    let service = Service::start("http-toggle");
+    let mut client = service.connect();
+    client.read(); // hello
+    assert!(service.mcp_url().is_none(), "should start switched off");
+
+    let port = free_port();
+    client.ok(
+        "update_settings",
+        serde_json::json!({"mcp_http_enabled": true, "mcp_http_port": port}),
+    );
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while service.mcp_url().is_none() {
+        assert!(Instant::now() < deadline, "endpoint never came up");
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    assert!(TcpStream::connect(("127.0.0.1", port)).is_ok());
+
+    client.ok(
+        "update_settings",
+        serde_json::json!({"mcp_http_enabled": false}),
+    );
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while service.mcp_url().is_some() {
+        assert!(Instant::now() < deadline, "endpoint never went away");
+        std::thread::sleep(Duration::from_millis(50));
+    }
 }

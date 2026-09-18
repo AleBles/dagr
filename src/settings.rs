@@ -82,7 +82,7 @@ impl Default for Settings {
             priorities_enabled: true,
             default_priority_id: None,
             sort_order: SortOrder::PriorityOldest,
-            mcp_http_enabled: false,
+            mcp_http_enabled: true,
             mcp_http_port: 7331,
         }
     }

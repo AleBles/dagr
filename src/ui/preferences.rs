@@ -13,6 +13,7 @@ use gtk::glib;
 
 use crate::db::Db;
 use crate::mcp_http::Status;
+use crate::serve;
 use crate::settings::{Settings, SortOrder};
 use crate::task::Priority;
 use crate::ui::colors;
@@ -83,8 +84,8 @@ pub fn open(ctx: &Rc<Ctx>) {
     priorities_group.add(&list);
     // --- AI access ---------------------------------------------------------------
     let mcp_switch = adw::SwitchRow::builder()
-        .title("MCP server over HTTP")
-        .subtitle("Let AI assistants connect while Dagr is open")
+        .title("MCP server")
+        .subtitle("Let AI assistants read and change your tasks")
         .active(settings.mcp_http_enabled)
         .build();
     let mcp_port = adw::SpinRow::with_range(f64::from(Settings::MIN_PORT), 65535.0, 1.0);
@@ -104,10 +105,12 @@ pub fn open(ctx: &Rc<Ctx>) {
     mcp_status.add_suffix(&mcp_copy);
     let ai = adw::PreferencesGroup::builder()
         .title("AI access")
-        .description(
-            "Assistants can always run `dagr --mcp` (stdio). This adds a local HTTP \
-             endpoint that only exists while the window is open.",
-        )
+        .description(format!(
+            "A local HTTP endpoint for assistants, served by Dagr's background \
+             service so it keeps working after this window is closed. To start it \
+             with your session, run: {}",
+            serve::setup_command()
+        ))
         .build();
     ai.add(&mcp_switch);
     ai.add(&mcp_port);
@@ -394,8 +397,14 @@ impl Prefs {
         self.mcp_switch.set_active(settings.mcp_http_enabled);
         self.mcp_port.set_value(f64::from(settings.mcp_http_port));
         let (title, subtitle, running) = match self.ctx.mcp_status() {
+            // Switched on but nothing listening yet: the window starts the
+            // service in the background, so this normally lasts a moment.
+            Status::Stopped if settings.mcp_http_enabled => (
+                "Starting…",
+                "Waiting for the background service".to_string(),
+                false,
+            ),
             Status::Stopped => ("Stopped", "Turn on above to start".to_string(), false),
-            Status::Starting => ("Starting…", settings.mcp_http_url(), false),
             Status::Running { url } => ("Running", url, true),
             Status::Failed(err) => ("Could not start", err, false),
         };
@@ -405,8 +414,9 @@ impl Prefs {
             running
                 .then(|| {
                     format!(
-                        "Claude Code: claude mcp add --transport http dagr {}",
-                        settings.mcp_http_url()
+                        "Claude Code: claude mcp add --transport http dagr {url}\n\
+                         .mcp.json: {{\"dagr\": {{\"type\": \"http\", \"url\": \"{url}\"}}}}",
+                        url = settings.mcp_http_url()
                     )
                 })
                 .as_deref(),

@@ -4,22 +4,35 @@
 //! window. Everything the user sees lives in `ui/`, data in `db.rs`.
 
 use adw::prelude::*;
-use dagr::{db, mcp, ui};
+use dagr::{db, serve, ui};
 use gtk::{gio, glib};
 
 /// Placeholder reverse-DNS id; rename before publishing anywhere.
 const APP_ID: &str = "dev.ables.Dagr";
 
 fn main() -> glib::ExitCode {
-    // `dagr --mcp`: no window, speak MCP over stdin/stdout instead.
-    if std::env::args().skip(1).any(|arg| arg == "--mcp") {
-        return match run_mcp() {
-            Ok(()) => glib::ExitCode::SUCCESS,
-            Err(err) => {
-                eprintln!("tasks: MCP server failed: {err:#}");
-                glib::ExitCode::FAILURE
-            }
-        };
+    // Pick the mode before anything else: the windowless ones must not touch
+    // GTK, so they can run under systemd with no display.
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    match args.first().map(String::as_str) {
+        Some("serve") if args.iter().any(|a| a == "--print-unit") => {
+            return report("printing the unit", serve::print_unit())
+        }
+        Some("serve") => return report("background service", serve::run()),
+        Some("status") => return report("status", serve::status()),
+        Some("setup") => return report("setup", serve::setup()),
+        _ => {}
+    }
+    // The stdio server is gone; there is one MCP endpoint now, served over
+    // HTTP by `dagr serve`. Fail loudly so an old config shows up as a broken
+    // server rather than hanging on a pipe that will never answer.
+    if args.iter().any(|arg| arg == "--mcp") {
+        eprintln!(
+            "dagr: --mcp has been removed. The MCP server now runs in the background \
+             service.\n      Start it with:  systemctl --user enable --now dagr\n      \
+             Then point clients at the url from:  dagr status"
+        );
+        return glib::ExitCode::FAILURE;
     }
 
     let app = adw::Application::builder()
@@ -36,12 +49,15 @@ fn main() -> glib::ExitCode {
     app.run()
 }
 
-fn run_mcp() -> anyhow::Result<()> {
-    let db = db::Db::open()?;
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?
-        .block_on(mcp::serve_stdio(db))
+/// Turns a mode's result into an exit code, naming the mode on failure.
+fn report(what: &str, result: anyhow::Result<()>) -> glib::ExitCode {
+    match result {
+        Ok(()) => glib::ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("dagr: {what} failed: {err:#}");
+            glib::ExitCode::FAILURE
+        }
+    }
 }
 
 fn build_ui(app: &adw::Application) {
