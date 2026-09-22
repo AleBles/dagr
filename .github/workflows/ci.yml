@@ -57,6 +57,6 @@ jobs:
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: dagr.flatpak
-          manifest-path: build-aux/dev.ables.Dagr.json
+          manifest-path: build-aux/nu.bles.dagr.json
           cache-key: flatpak-builder-${{ github.sha }}
           upload-artifact: true

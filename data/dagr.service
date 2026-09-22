@@ -4,7 +4,7 @@ Documentation=https://dagr.bles.nu
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/flatpak run --die-with-parent --command=dagr dev.ables.Dagr serve
+ExecStart=/usr/bin/flatpak run --die-with-parent --command=dagr nu.bles.dagr serve
 Restart=on-failure
 RestartSec=5
 

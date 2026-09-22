@@ -272,10 +272,7 @@ fn dispatch(request: Request, state: &State) -> Response {
     // `mutated` drives the change event: our own commits do not move
     // `data_version`, so the watcher above will never see them.
     let (reply, mutated) = match request.method {
-        Method::ListTasks(p) => (
-            encode(id, api.snapshot(p.include_done.unwrap_or(true))),
-            false,
-        ),
+        Method::ListTasks(p) => (encode(id, api.snapshot(p)), false),
         Method::AddTask(p) => (encode(id, api.add_task(p)), true),
         Method::UpdateTask(p) => (encode(id, api.update_task(p)), true),
         Method::DeleteTask(p) => (
@@ -290,6 +287,15 @@ fn dispatch(request: Request, state: &State) -> Response {
         Method::UpdatePriority(p) => (encode(id, api.update_priority(p)), true),
         Method::ReorderPriorities(p) => (encode(id, api.reorder_priorities(p)), true),
         Method::DeletePriority(p) => (encode(id, api.delete_priority(p)), true),
+        Method::ListLabels => (encode(id, api.list_labels()), false),
+        Method::AddLabel(p) => (encode(id, api.add_label(p)), true),
+        Method::UpdateLabel(p) => (encode(id, api.update_label(p)), true),
+        Method::DeleteLabel(p) => (encode(id, api.delete_label(p)), true),
+        Method::ListLists => (encode(id, api.list_lists()), false),
+        Method::AddList(p) => (encode(id, api.add_list(p)), true),
+        Method::UpdateList(p) => (encode(id, api.update_list(p)), true),
+        Method::ReorderLists(p) => (encode(id, api.reorder_lists(p)), true),
+        Method::DeleteList(p) => (encode(id, api.delete_list(p)), true),
         Method::Subscribe => (
             Response::ok(id, serde_json::json!({"subscribed": true})),
             false,

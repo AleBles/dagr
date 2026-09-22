@@ -1,5 +1,5 @@
 {
-  "id": "dev.ables.Dagr",
+  "id": "nu.bles.dagr",
   "runtime": "org.gnome.Platform",
   "runtime-version": "50",
   "sdk": "org.gnome.Sdk",
@@ -30,10 +30,10 @@
         "cargo --offline build --release --locked --jobs \"${FLATPAK_BUILDER_N_JOBS:-4}\"",
         "install -Dm755 target/release/dagr /app/bin/dagr",
         "install -Dm644 data/dagr.service /app/share/dagr/dagr.service",
-        "install -Dm644 data/dev.ables.Dagr.desktop /app/share/applications/dev.ables.Dagr.desktop",
-        "install -Dm644 data/dev.ables.Dagr.metainfo.xml /app/share/metainfo/dev.ables.Dagr.metainfo.xml",
-        "install -Dm644 data/icons/hicolor/scalable/apps/dev.ables.Dagr.svg /app/share/icons/hicolor/scalable/apps/dev.ables.Dagr.svg",
-        "install -Dm644 data/icons/hicolor/symbolic/apps/dev.ables.Dagr-symbolic.svg /app/share/icons/hicolor/symbolic/apps/dev.ables.Dagr-symbolic.svg"
+        "install -Dm644 data/nu.bles.dagr.desktop /app/share/applications/nu.bles.dagr.desktop",
+        "install -Dm644 data/nu.bles.dagr.metainfo.xml /app/share/metainfo/nu.bles.dagr.metainfo.xml",
+        "install -Dm644 data/icons/hicolor/scalable/apps/nu.bles.dagr.svg /app/share/icons/hicolor/scalable/apps/nu.bles.dagr.svg",
+        "install -Dm644 data/icons/hicolor/symbolic/apps/nu.bles.dagr-symbolic.svg /app/share/icons/hicolor/symbolic/apps/nu.bles.dagr-symbolic.svg"
       ],
       "sources": [
         {

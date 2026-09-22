@@ -68,6 +68,163 @@ fn reports_bad_input_without_dropping_the_connection() {
 }
 
 #[test]
+fn date_first_travels_over_the_socket() {
+    // The socket cannot backdate a task, so this covers the plumbing; the
+    // day maths itself is proved by the unit tests in `db.rs`.
+    let service = Service::start("date_first");
+    let mut client = service.connect();
+    client.read(); // hello
+
+    assert_eq!(
+        client.ok("get_settings", serde_json::json!({}))["date_first"],
+        false
+    );
+
+    let updated = client.ok("update_settings", serde_json::json!({"date_first": true}));
+    assert_eq!(updated["date_first"], true);
+    // A patch leaves everything it does not name alone.
+    assert_eq!(updated["sort_order"], "priority_oldest");
+
+    // The window reads the same database, so it orders by the same rule.
+    let db = Db::open_at(&service.db_path()).expect("open the database directly");
+    assert!(db.settings().unwrap().date_first);
+
+    // And the launcher sees it in the one round trip it makes.
+    assert_eq!(
+        client.ok("list_tasks", serde_json::json!({}))["settings"]["date_first"],
+        true
+    );
+}
+
+#[test]
+fn labels_travel_over_the_socket() {
+    let service = Service::start_with_labels("labels");
+    let mut client = service.connect();
+    client.read(); // hello
+
+    let added = client.ok("add_label", serde_json::json!({"name": "work"}));
+    assert_eq!(added["name"], "work");
+    assert!(added["color"].as_str().unwrap().starts_with('#'));
+
+    // A leading #tag is read by the service, exactly like `!`, so the launcher
+    // can pass a typed query straight through.
+    let task = client.ok(
+        "add_task",
+        serde_json::json!({"title": "#work #q4 pay rent"}),
+    );
+    assert_eq!(task["title"], "pay rent");
+    assert_eq!(task["labels"][0]["name"], "q4");
+    assert_eq!(task["labels"][1]["name"], "work");
+    let id = task["id"].as_i64().unwrap();
+
+    // One round trip carries the catalogue as well as the assignments.
+    let listed = client.ok("list_tasks", serde_json::json!({}));
+    assert_eq!(listed["labels"].as_array().unwrap().len(), 2);
+    assert_eq!(listed["settings"]["labels_enabled"], true);
+    assert_eq!(listed["tasks"][0]["labels"].as_array().unwrap().len(), 2);
+
+    // The window reads the same database.
+    let db = Db::open_at(&service.db_path()).expect("open the database directly");
+    assert_eq!(db.load_labels().unwrap().len(), 2);
+
+    // Replacing the set with nothing drops the key from the row entirely.
+    let cleared = client.ok("update_task", serde_json::json!({"id": id, "labels": []}));
+    assert!(
+        cleared.get("labels").is_none(),
+        "empty labels should be omitted"
+    );
+
+    let left = client.ok("delete_label", serde_json::json!({"id": added["id"]}));
+    assert_eq!(left.as_array().unwrap().len(), 1);
+}
+
+#[test]
+fn labels_stay_out_of_the_way_until_asked_for() {
+    let service = Service::start("no-labels");
+    let mut client = service.connect();
+    client.read(); // hello
+
+    let listed = client.ok("list_tasks", serde_json::json!({}));
+    assert_eq!(listed["settings"]["labels_enabled"], false);
+    assert!(listed["labels"].as_array().unwrap().is_empty());
+
+    // With the feature off a '#' is part of the title, and the row carries no
+    // labels key at all - the wire looks exactly as it did before labels.
+    let task = client.ok("add_task", serde_json::json!({"title": "#work pay rent"}));
+    assert_eq!(task["title"], "#work pay rent");
+    assert!(task.get("labels").is_none());
+}
+
+#[test]
+fn lists_travel_over_the_socket() {
+    let service = Service::start_with_lists("lists");
+    let mut client = service.connect();
+    client.read(); // hello
+
+    // A fresh database already has the one list every task lives in.
+    let listed = client.ok("list_tasks", serde_json::json!({}));
+    assert_eq!(listed["lists"].as_array().unwrap().len(), 1);
+    assert_eq!(listed["settings"]["lists_enabled"], true);
+
+    let work = client.ok("add_list", serde_json::json!({"name": "Work"}));
+    assert_eq!(work["name"], "Work");
+    let work_id = work["id"].as_i64().unwrap();
+
+    // A leading @list files the task, exactly like `!` and `#tag`.
+    let task = client.ok(
+        "add_task",
+        serde_json::json!({"title": "@work pay the invoice"}),
+    );
+    assert_eq!(task["title"], "pay the invoice");
+    assert_eq!(task["list"]["name"], "Work");
+
+    // Typing a name that is no list never creates one.
+    let stray = client.ok("add_task", serde_json::json!({"title": "@nope buy milk"}));
+    assert_eq!(stray["title"], "buy milk");
+    assert_eq!(stray["list"]["name"], "Tasks");
+    assert_eq!(
+        client
+            .ok("list_lists", serde_json::json!({}))
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+
+    // What the window shows is what a client sees, unless it asks for more.
+    client.ok(
+        "update_settings",
+        serde_json::json!({"current_list": "Work"}),
+    );
+    let showing = client.ok("list_tasks", serde_json::json!({}));
+    assert_eq!(showing["tasks"].as_array().unwrap().len(), 1);
+    let everything = client.ok("list_tasks", serde_json::json!({"list": "all"}));
+    assert_eq!(everything["tasks"].as_array().unwrap().len(), 2);
+
+    // Deleting a list keeps its tasks.
+    let left = client.ok("delete_list", serde_json::json!({"id": work_id}));
+    assert_eq!(left.as_array().unwrap().len(), 1);
+    let after = client.ok("list_tasks", serde_json::json!({"list": "all"}));
+    assert_eq!(after["tasks"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn lists_stay_out_of_the_way_until_asked_for() {
+    let service = Service::start("no-lists");
+    let mut client = service.connect();
+    client.read(); // hello
+
+    let task = client.ok("add_task", serde_json::json!({"title": "@work pay rent"}));
+    assert_eq!(task["title"], "@work pay rent");
+    assert!(
+        task.get("list").is_none(),
+        "no list key while the feature is off"
+    );
+    let listed = client.ok("list_tasks", serde_json::json!({}));
+    assert_eq!(listed["settings"]["lists_enabled"], false);
+}
+
+#[test]
 fn a_second_service_steps_aside() {
     let service = Service::start("rival");
     let status = service.start_rival();

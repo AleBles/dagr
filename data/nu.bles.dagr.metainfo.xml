@@ -1,25 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>dev.ables.Dagr</id>
+  <id>nu.bles.dagr</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>Dagr</name>
   <summary>A simple, priority-ordered task list</summary>
+  <summary xml:lang="nl">Een eenvoudige, op prioriteit geordende takenlijst</summary>
   <description>
     <p>
       One window, one list, ordered by priority. Add a task by typing and
       pressing Enter; everything else is one click away: complete, edit,
       re-prioritize, delete with undo.
     </p>
+    <p xml:lang="nl">
+      Eén venster, één lijst, geordend op prioriteit. Voeg een taak toe door te
+      typen en op Enter te drukken; al het andere is één klik weg: voltooien,
+      bewerken, herprioriteren, verwijderen met ongedaan maken.
+    </p>
     <p>
       Priorities are fully user-defined and the list order, default priority
       and other behaviour are adjustable in Preferences. The app also acts as
       an MCP server, so AI assistants can do everything you can.
     </p>
+    <p xml:lang="nl">
+      Prioriteiten stel je volledig zelf samen, en de lijstvolgorde, de
+      standaardprioriteit en ander gedrag pas je aan in Voorkeuren. De app is
+      ook een MCP-server, zodat AI-assistenten alles kunnen wat jij kunt.
+    </p>
   </description>
-  <launchable type="desktop-id">dev.ables.Dagr.desktop</launchable>
+  <launchable type="desktop-id">nu.bles.dagr.desktop</launchable>
   <url type="homepage">https://dagr.bles.nu</url>
-  <developer id="dev.ables">
+  <developer id="nu.bles">
     <name>Ale</name>
   </developer>
   <content_rating type="oars-1.1"/>

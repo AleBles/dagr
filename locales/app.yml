@@ -1,0 +1,391 @@
+# Every user-facing string in Dagr, English and Dutch side by side. Strings an
+# AI assistant reads (MCP tool descriptions, API errors) are deliberately not
+# in here: those are an interface contract, and stay English. So does the
+# terminal output of `dagr serve` and friends.
+_version: 2
+
+seed:
+  list:
+    en: Tasks
+    nl: Taken
+  priority:
+    high:
+      en: High
+      nl: Hoog
+    medium:
+      en: Medium
+      nl: Middel
+    low:
+      en: Low
+      nl: Laag
+    none:
+      en: None
+      nl: Geen
+
+entry:
+  placeholder:
+    en: Add a task…
+    nl: Voeg een taak toe…
+  add:
+    en: Add task
+    nl: Taak toevoegen
+  hint:
+    base:
+      en: Press Enter to add.
+      nl: Druk op Enter om toe te voegen.
+    priorities:
+      en: Each leading ! raises the priority one level above the default.
+      nl: Elke ! vooraan verhoogt de prioriteit één niveau boven de standaard.
+    labels:
+      en: Each leading #tag adds a label.
+      nl: Elke #tag vooraan voegt een label toe.
+    lists:
+      en: A leading @list files it in that list.
+      nl: Een @lijst vooraan zet de taak in die lijst.
+
+empty:
+  title:
+    en: No tasks
+    nl: Geen taken
+  body:
+    en: Type above and press Enter to add one
+    nl: Typ hierboven en druk op Enter om er een toe te voegen
+
+task:
+  mark_done:
+    en: Mark as done
+    nl: Als voltooid markeren
+  mark_not_done:
+    en: Mark as not done
+    nl: Als niet voltooid markeren
+  unknown_priority:
+    en: Unknown
+    nl: Onbekend
+  priority:
+    en: "Priority: %{name}"
+    nl: "Prioriteit: %{name}"
+  labels_none:
+    en: Labels
+    nl: Labels
+  labels:
+    en: "Labels: %{names}"
+    nl: "Labels: %{names}"
+  delete:
+    en: Delete
+    nl: Verwijderen
+
+header:
+  clear:
+    en: Clear completed
+    nl: Voltooide wissen
+  clear_tooltip:
+    en: Remove all done tasks (Ctrl+Shift+D)
+    nl: Alle voltooide taken verwijderen (Ctrl+Shift+D)
+  menu:
+    en: Main menu
+    nl: Hoofdmenu
+  sidebar:
+    en: Show lists
+    nl: Lijsten tonen
+
+menu:
+  preferences:
+    en: _Preferences
+    nl: _Voorkeuren
+  about:
+    en: _About Dagr
+    nl: _Over Dagr
+  quit:
+    en: _Quit
+    nl: _Afsluiten
+
+sidebar:
+  title:
+    en: Lists
+    nl: Lijsten
+  all:
+    en: All tasks
+    nl: Alle taken
+  new:
+    en: New list
+    nl: Nieuwe lijst
+  new_name:
+    en: New list
+    nl: Nieuwe lijst
+  new_name_numbered:
+    en: New list %{number}
+    nl: Nieuwe lijst %{number}
+  delete:
+    en: Delete list
+    nl: Lijst verwijderen
+
+toast:
+  undo:
+    en: Undo
+    nl: Ongedaan maken
+  task_deleted:
+    en: Task deleted
+    nl: Taak verwijderd
+  cleared_one:
+    en: 1 completed task cleared
+    nl: 1 voltooide taak gewist
+  cleared_many:
+    en: "%{count} completed tasks cleared"
+    nl: "%{count} voltooide taken gewist"
+  error:
+    en: "Error: %{message}"
+    nl: "Fout: %{message}"
+  no_priorities:
+    en: No priorities defined
+    nl: Geen prioriteiten ingesteld
+  last_list:
+    en: The last list cannot be deleted
+    nl: De laatste lijst kan niet worden verwijderd
+  unknown_list:
+    en: No list called “%{name}” — added to %{list}
+    nl: Geen lijst met de naam “%{name}” — toegevoegd aan %{list}
+  create_list:
+    en: Create list
+    nl: Lijst aanmaken
+  default_list:
+    en: the default list
+    nl: de standaardlijst
+  markers_off:
+    en: "%{markers} kept as text — switched off"
+    nl: "%{markers} als tekst behouden — staat uit"
+  markers_and:
+    en: and
+    nl: en
+  settings:
+    en: Settings
+    nl: Instellingen
+
+dialog:
+  delete_list:
+    title:
+      en: Delete “%{name}”?
+      nl: “%{name}” verwijderen?
+    empty:
+      en: “%{name}” is empty.
+      nl: “%{name}” is leeg.
+    one:
+      en: Its 1 task moves to “%{list}”.
+      nl: De 1 taak erin verhuist naar “%{list}”.
+    many:
+      en: Its %{count} tasks move to “%{list}”.
+      nl: De %{count} taken erin verhuizen naar “%{list}”.
+  cancel:
+    en: Cancel
+    nl: Annuleren
+  delete:
+    en: Delete
+    nl: Verwijderen
+
+prefs:
+  title:
+    en: Preferences
+    nl: Voorkeuren
+  name:
+    en: Name
+    nl: Naam
+  color:
+    en: Change color
+    nl: Kleur wijzigen
+  settings:
+    title:
+      en: Settings
+      nl: Instellingen
+    ordering:
+      en: List ordering
+      nl: Lijstvolgorde
+    sort_order:
+      en: Sort order
+      nl: Sorteervolgorde
+    sort_order_sub:
+      en: Completed tasks always go last
+      nl: Voltooide taken staan altijd onderaan
+    date_first:
+      en: Date before priority
+      nl: Datum vóór prioriteit
+    date_first_sub:
+      en: Tasks added on the same day stay together, oldest day first
+      nl: Taken van dezelfde dag blijven bij elkaar, oudste dag eerst
+    window:
+      en: Window
+      nl: Venster
+    window_desc:
+      en: The size the window opens at, in pixels. Resizing the window by hand does not change it, and a new size applies the next time Dagr starts.
+      nl: De grootte waarmee het venster opent, in pixels. Het venster met de hand verslepen verandert dit niet, en een nieuwe grootte geldt zodra Dagr opnieuw start.
+    width:
+      en: Width
+      nl: Breedte
+    height:
+      en: Height
+      nl: Hoogte
+    language:
+      en: Language
+      nl: Taal
+    language_desc:
+      en: Applies the next time Dagr starts, because the toolkit picks its own language once at launch.
+      nl: Geldt zodra Dagr opnieuw start, omdat de toolkit zijn taal eenmalig bij het starten kiest.
+    language_system:
+      en: System language
+      nl: Systeemtaal
+  sort:
+    priority_oldest:
+      en: Priority, then oldest first
+      nl: Prioriteit, dan oudste eerst
+    priority_newest:
+      en: Priority, then newest first
+      nl: Prioriteit, dan nieuwste eerst
+    oldest:
+      en: Oldest first
+      nl: Oudste eerst
+    newest:
+      en: Newest first
+      nl: Nieuwste eerst
+    alphabetical:
+      en: Alphabetical
+      nl: Alfabetisch
+  priorities:
+    title:
+      en: Priorities
+      nl: Prioriteiten
+    switch:
+      en: Use priorities
+      nl: Prioriteiten gebruiken
+    switch_sub:
+      en: Color-coded levels that order the list
+      nl: Niveaus met kleuren die de lijst ordenen
+    desc:
+      en: The top one is the highest. Drag the grip or use the arrows to reorder.
+      nl: De bovenste is de hoogste. Sleep aan de greep of gebruik de pijlen om te herordenen.
+    add:
+      en: Add priority
+      nl: Prioriteit toevoegen
+    default:
+      en: Default for new tasks
+      nl: Standaard voor nieuwe taken
+    default_sub:
+      en: Each leading ! in a title moves one level up from here
+      nl: Elke ! vooraan in een titel gaat één niveau omhoog vanaf hier
+    lowest:
+      en: Lowest
+      nl: Laagste
+    up:
+      en: Move up (higher priority)
+      nl: Omhoog (hogere prioriteit)
+    down:
+      en: Move down (lower priority)
+      nl: Omlaag (lagere prioriteit)
+    remove:
+      en: Remove (its tasks move to the next priority)
+      nl: Verwijderen (de taken gaan naar de volgende prioriteit)
+    new_name:
+      en: New priority
+      nl: Nieuwe prioriteit
+  labels:
+    title:
+      en: Labels
+      nl: Labels
+    switch:
+      en: Use labels
+      nl: Labels gebruiken
+    switch_sub:
+      en: Colored dots on a task, picked from the row or typed as #tag
+      nl: Gekleurde stippen op een taak, gekozen op de rij of getypt als #tag
+    desc:
+      en: Listed alphabetically. A task can carry any number of them.
+      nl: Alfabetisch geordend. Een taak kan er zoveel dragen als je wilt.
+    add:
+      en: Add label
+      nl: Label toevoegen
+    empty:
+      en: No labels yet. Add one with +, or type #tag in front of a new task.
+      nl: Nog geen labels. Voeg er een toe met +, of typ #tag vóór een nieuwe taak.
+    remove:
+      en: Remove (tasks keep their other labels)
+      nl: Verwijderen (taken houden hun andere labels)
+    new_name:
+      en: New label
+      nl: Nieuw label
+  lists:
+    title:
+      en: Lists
+      nl: Lijsten
+    switch:
+      en: Use lists
+      nl: Lijsten gebruiken
+    switch_sub:
+      en: A sidebar of lists, and @list when adding a task
+      nl: Een zijbalk met lijsten, en @lijst bij het toevoegen van een taak
+    desc:
+      en: Add, rename, reorder and remove lists in the sidebar.
+      nl: Lijsten toevoegen, hernoemen, herordenen en verwijderen doe je in de zijbalk.
+    default:
+      en: Default list
+      nl: Standaardlijst
+    default_sub:
+      en: Where a task goes when no single list is showing
+      nl: Waar een taak heen gaat als er geen enkele lijst getoond wordt
+    open_on:
+      en: Open on
+      nl: Openen op
+  open_on:
+    last_used:
+      en: The list last shown
+      nl: De laatst getoonde lijst
+    default_list:
+      en: The default list
+      nl: De standaardlijst
+    all_tasks:
+      en: All tasks
+      nl: Alle taken
+  ai:
+    title:
+      en: AI access
+      nl: AI-toegang
+    switch:
+      en: MCP server
+      nl: MCP-server
+    switch_sub:
+      en: Let AI assistants read and change your tasks
+      nl: Laat AI-assistenten je taken lezen en wijzigen
+    desc:
+      en: "A local HTTP endpoint for assistants, served by Dagr's background service so it keeps working after this window is closed. To start it with your session, run: %{command}"
+      nl: "Een lokaal HTTP-eindpunt voor assistenten, bediend door de achtergronddienst van Dagr, zodat het blijft werken nadat dit venster is gesloten. Start het mee met je sessie via: %{command}"
+    port:
+      en: Port
+      nl: Poort
+    copy:
+      en: Copy address
+      nl: Adres kopiëren
+    starting:
+      en: Starting…
+      nl: Bezig met starten…
+    starting_sub:
+      en: Waiting for the background service
+      nl: Wachten op de achtergronddienst
+    stopped:
+      en: Stopped
+      nl: Gestopt
+    stopped_sub:
+      en: Turn on above to start
+      nl: Zet hierboven aan om te starten
+    running:
+      en: Running
+      nl: Actief
+    failed:
+      en: Could not start
+      nl: Kon niet starten
+
+about:
+  comments:
+    en: |-
+      A simple, priority-ordered task list.
+
+      Shortcuts: Ctrl+N focus the entry, Ctrl+Shift+D clear completed, Ctrl+, preferences (Ctrl+1…Ctrl+5 switch its pages), Ctrl+Q quit.
+    nl: |-
+      Een eenvoudige, op prioriteit geordende takenlijst.
+
+      Sneltoetsen: Ctrl+N naar het invoerveld, Ctrl+Shift+D voltooide wissen, Ctrl+, voorkeuren (Ctrl+1…Ctrl+5 wisselt van pagina), Ctrl+Q afsluiten.

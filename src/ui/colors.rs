@@ -21,10 +21,16 @@ pub fn to_hex(rgba: &gdk::RGBA) -> String {
 
 /// A filled circle in the given color, used on task rows and in pickers.
 pub fn dot(color: &str) -> gtk::DrawingArea {
+    dot_sized(color, 12)
+}
+
+/// The same at a chosen size. Label dots are drawn smaller than priority dots,
+/// so one label never reads as a second priority.
+pub fn dot_sized(color: &str, size: i32) -> gtk::DrawingArea {
     let rgba = parse(color);
     let area = gtk::DrawingArea::builder()
-        .content_width(12)
-        .content_height(12)
+        .content_width(size)
+        .content_height(size)
         .valign(gtk::Align::Center)
         .halign(gtk::Align::Center)
         .build();

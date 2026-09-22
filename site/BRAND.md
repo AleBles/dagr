@@ -30,7 +30,7 @@ meaning "day" — two uprights joined by a crossing stroke.
 | Cross (accent) | `#d97706` (amber-600) | `#f59e0b` (amber-500) |
 | Background | `#faf6ed` (cream) | `#0f172a` (slate-900) |
 
-The app icon itself (`data/icons/.../dev.ables.Dagr.svg`) is the same rune in
+The app icon itself (`data/icons/.../nu.bles.dagr.svg`) is the same rune in
 white on a GNOME-blue tile — that is the launcher/desktop identity, while these
 amber-on-cream marks are the project/web identity, matching the sibling
 [skald](https://skald.bles.nu) site.

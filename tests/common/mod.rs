@@ -79,7 +79,27 @@ impl Service {
         service
     }
 
+    /// A service with the label feature already switched on, since it is off
+    /// by default and the setting has to be in place before the first write.
+    pub fn start_with_labels(label: &str) -> Self {
+        Self::spawn_with(label, None, true, false)
+    }
+
+    /// The same for lists.
+    pub fn start_with_lists(label: &str) -> Self {
+        Self::spawn_with(label, None, false, true)
+    }
+
     fn spawn(label: &str, mcp_port: Option<u16>) -> Self {
+        Self::spawn_with(label, mcp_port, false, false)
+    }
+
+    fn spawn_with(
+        label: &str,
+        mcp_port: Option<u16>,
+        labels_enabled: bool,
+        lists_enabled: bool,
+    ) -> Self {
         let dir = TempDir::new(label);
         let socket = dir.0.join("run").join("dagr.sock");
         let data = dir.0.join("data");
@@ -94,6 +114,8 @@ impl Service {
             if let Some(port) = mcp_port {
                 settings.mcp_http_port = port;
             }
+            settings.labels_enabled = labels_enabled;
+            settings.lists_enabled = lists_enabled;
             db.save_settings(&settings).unwrap();
         }
 

@@ -4,11 +4,11 @@
 //! window. Everything the user sees lives in `ui/`, data in `db.rs`.
 
 use adw::prelude::*;
-use dagr::{db, serve, ui};
+use dagr::{db, i18n, serve, settings::Language, ui};
 use gtk::{gio, glib};
 
 /// Placeholder reverse-DNS id; rename before publishing anywhere.
-const APP_ID: &str = "dev.ables.Dagr";
+const APP_ID: &str = "nu.bles.dagr";
 
 fn main() -> glib::ExitCode {
     // Pick the mode before anything else: the windowless ones must not touch
@@ -33,6 +33,19 @@ fn main() -> glib::ExitCode {
              Then point clients at the url from:  dagr status"
         );
         return glib::ExitCode::FAILURE;
+    }
+
+    // Language before anything else. The system's choice first, so a database
+    // created in a moment seeds its list and priorities in the right language;
+    // then the stored override, if there is one, before GTK reads the
+    // environment for its own translations.
+    i18n::apply(Language::System);
+    let stored = db::Db::open()
+        .and_then(|db| db.settings())
+        .map(|settings| settings.language)
+        .unwrap_or(Language::System);
+    if stored != Language::System {
+        i18n::apply(stored);
     }
 
     let app = adw::Application::builder()
@@ -107,7 +120,7 @@ fn show_about(app: &adw::Application) {
         .application_name("Dagr")
         .application_icon(APP_ID)
         .version(env!("CARGO_PKG_VERSION"))
-        .comments("A simple, priority-ordered task list.\n\nShortcuts: Ctrl+N focus the entry, Ctrl+Shift+D clear completed, Ctrl+, preferences, Ctrl+Q quit.")
+        .comments(i18n::about_comments())
         .build();
     about.present(app.active_window().as_ref());
 }

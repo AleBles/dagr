@@ -3,6 +3,7 @@ target/
 build-aux/.flatpak-builder/
 build-aux/build-dir/
 *.flatpak
-.idea/
+.idea/*
+!.idea/runConfigurations/
 _build
 ROADMAP.md

@@ -48,6 +48,62 @@ fn parses_the_done_toggle_the_plugin_sends() {
 }
 
 #[test]
+fn parses_the_label_methods() {
+    assert!(matches!(
+        parse(r#"{"id":9,"method":"list_labels"}"#).method,
+        Method::ListLabels
+    ));
+    match parse(r#"{"id":10,"method":"add_label","params":{"name":"work"}}"#).method {
+        Method::AddLabel(p) => {
+            assert_eq!(p.name, "work");
+            assert!(p.color.is_none());
+        }
+        other => panic!("wrong method: {other:?}"),
+    }
+    match parse(r#"{"id":11,"method":"delete_label","params":{"id":3}}"#).method {
+        Method::DeleteLabel(p) => assert_eq!(p.id, 3),
+        other => panic!("wrong method: {other:?}"),
+    }
+}
+
+#[test]
+fn parses_labels_on_a_task_update() {
+    let r =
+        parse(r#"{"id":12,"method":"update_task","params":{"id":42,"labels":["work","home"]}}"#);
+    match r.method {
+        Method::UpdateTask(p) => {
+            assert_eq!(p.id, 42);
+            assert_eq!(p.labels, Some(vec!["work".to_string(), "home".to_string()]));
+            assert!(p.done.is_none());
+        }
+        other => panic!("wrong method: {other:?}"),
+    }
+}
+
+#[test]
+fn parses_the_list_methods() {
+    assert!(matches!(
+        parse(r#"{"id":13,"method":"list_lists"}"#).method,
+        Method::ListLists
+    ));
+    match parse(r#"{"id":14,"method":"add_list","params":{"name":"Work"}}"#).method {
+        Method::AddList(p) => assert_eq!(p.name, "Work"),
+        other => panic!("wrong method: {other:?}"),
+    }
+    match parse(r#"{"id":15,"method":"delete_list","params":{"id":2,"move_to":"Tasks"}}"#).method {
+        Method::DeleteList(p) => {
+            assert_eq!(p.id, 2);
+            assert_eq!(p.move_to.as_deref(), Some("Tasks"));
+        }
+        other => panic!("wrong method: {other:?}"),
+    }
+    match parse(r#"{"id":16,"method":"reorder_lists","params":{"ids":[3,1]}}"#).method {
+        Method::ReorderLists(p) => assert_eq!(p.ids, vec![3, 1]),
+        other => panic!("wrong method: {other:?}"),
+    }
+}
+
+#[test]
 fn parses_methods_that_take_no_params() {
     assert!(matches!(
         parse(r#"{"id":2,"method":"subscribe"}"#).method,

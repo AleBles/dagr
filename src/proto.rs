@@ -10,8 +10,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::api::{
-    AddPriorityParams, AddTaskParams, ApiError, IdParams, ListTasksParams, ReorderPrioritiesParams,
-    UpdatePriorityParams, UpdateSettingsParams, UpdateTaskParams,
+    AddLabelParams, AddListParams, AddPriorityParams, AddTaskParams, ApiError, DeleteListParams,
+    IdParams, ListTasksParams, ReorderListsParams, ReorderPrioritiesParams, UpdateLabelParams,
+    UpdateListParams, UpdatePriorityParams, UpdateSettingsParams, UpdateTaskParams,
 };
 
 /// Bumped only for a change old clients could not survive. A client seeing a
@@ -83,6 +84,15 @@ pub enum Method {
     UpdatePriority(UpdatePriorityParams),
     ReorderPriorities(ReorderPrioritiesParams),
     DeletePriority(IdParams),
+    ListLabels,
+    AddLabel(AddLabelParams),
+    UpdateLabel(UpdateLabelParams),
+    DeleteLabel(IdParams),
+    ListLists,
+    AddList(AddListParams),
+    UpdateList(UpdateListParams),
+    ReorderLists(ReorderListsParams),
+    DeleteList(DeleteListParams),
     /// Ask for `changed` events on this connection from now on.
     Subscribe,
     /// Cheap liveness check.

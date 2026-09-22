@@ -1,11 +1,13 @@
 [Desktop Entry]
 Name=Dagr
 Comment=A simple, priority-ordered task list
+Comment[nl]=Een eenvoudige, op prioriteit geordende takenlijst
 Exec=dagr
-Icon=dev.ables.Dagr
+Icon=nu.bles.dagr
 Terminal=false
 Type=Application
 Categories=GTK;Office;ProjectManagement;
 Keywords=todo;tasks;list;
+Keywords[nl]=todo;taken;takenlijst;lijst;
 StartupNotify=true
 DBusActivatable=false
