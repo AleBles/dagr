@@ -1,0 +1,38 @@
+# dagr
+
+> A small, priority-ordered to-do app for Linux (GTK 4 + libadwaita) that ships
+> a Model Context Protocol server, so an AI assistant can read and change your
+> tasks on the same local SQLite file the window uses.
+
+Free and open source (MIT). No account, no cloud, no telemetry. Developed on
+Linux; packaged as a Flatpak.
+
+## What it is
+
+- A desktop to-do app: one window, one list, ordered by user-defined priorities.
+- Optional colored labels (several per task) and optional task lists, both off
+  by default.
+- Type `!`, `!!`, `!!!` before a task to raise its priority, `#tag` to label it,
+  `@list` to file it.
+- English and Dutch, following the system language.
+
+## For assistants
+
+- The background service (`dagr serve`) hosts an MCP server over Streamable
+  HTTP at `http://127.0.0.1:7331/mcp`, bound to localhost. Add it with:
+  `claude mcp add --transport http dagr http://127.0.0.1:7331/mcp`
+- Twenty-one tools: list_tasks, add_task, update_task, delete_task,
+  clear_completed, list_priorities, add_priority, update_priority,
+  reorder_priorities, delete_priority, list_labels, add_label, update_label,
+  delete_label, list_lists, add_list, update_list, reorder_lists, delete_list,
+  get_settings, update_settings.
+- Priorities, labels and lists can be given by name or id. Changes appear in the
+  running window within a second, because both read one SQLite file.
+- The same service answers a Unix socket at `$XDG_RUNTIME_DIR/dagr/dagr.sock`
+  with newline-delimited JSON, for desktop scripting.
+
+## Links
+
+- Site: https://dagr.bles.nu
+- Source: https://github.com/alebles/dagr
+- Releases (Flatpak bundle): https://github.com/alebles/dagr/releases/latest

@@ -3,25 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>dagr — a tiny, AI-scriptable task list for Linux</title>
-<meta name="description" content="Dagr is a small priority-ordered task list for Linux built with GTK 4 and libadwaita. Everything one click away, and a built-in MCP server so an AI assistant can do anything you can.">
+<title>dagr — a Linux task list with a built-in MCP server</title>
+<meta name="description" content="Dagr is a small, priority-ordered to-do app for Linux, built with GTK 4 and libadwaita. It ships a Model Context Protocol (MCP) server, so Claude, Cursor, Zed or any MCP client can read and change your tasks — add, complete, label and re-prioritise — while the window stays in sync.">
 <meta name="keywords" content="dagr, task list, todo, linux, gtk4, libadwaita, rust, gnome, mcp, model context protocol, ai tasks">
 
 <link rel="canonical" href="https://dagr.bles.nu/">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="apple-touch-icon" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <meta name="theme-color" content="#0b0a1a">
 
-<meta property="og:title" content="dagr — a tiny, AI-scriptable task list for Linux">
+<meta property="og:title" content="dagr — a Linux task list with a built-in MCP server">
 <meta property="og:description" content="Priority-ordered, one click for everything, and a built-in MCP server so an assistant can do anything you can.">
 <meta property="og:url" content="https://dagr.bles.nu/">
 <meta property="og:site_name" content="dagr">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://dagr.bles.nu/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Dagr window listing six tasks with colored priority dots, beside the dagr wordmark">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="dagr — a tiny, AI-scriptable task list for Linux">
+<meta name="twitter:title" content="dagr — a Linux task list with a built-in MCP server">
 <meta name="twitter:description" content="Priority-ordered, one click for everything, and a built-in MCP server so an assistant can do anything you can.">
+<meta name="twitter:image" content="https://dagr.bles.nu/share.png">
+<meta name="twitter:image:alt" content="The Dagr window listing six tasks with colored priority dots, beside the dagr wordmark">
 
 <script type="application/ld+json">
 {
@@ -32,6 +39,21 @@
   "url": "https://dagr.bles.nu/",
   "applicationCategory": "Productivity",
   "operatingSystem": "Linux",
+  "applicationSubCategory": "Task management",
+  "softwareVersion": "0.2.0",
+  "isAccessibleForFree": true,
+  "inLanguage": ["en", "nl"],
+  "screenshot": "https://dagr.bles.nu/share.png",
+  "downloadUrl": "https://github.com/alebles/dagr/releases/latest",
+  "featureList": [
+    "Priority-ordered task list with user-defined levels",
+    "Optional colored labels, several per task",
+    "Optional task lists with a sidebar",
+    "Built-in MCP server for AI assistants",
+    "Unix socket for desktop scripting",
+    "English and Dutch",
+    "Local SQLite storage, no account and no cloud"
+  ],
   "license": "https://opensource.org/license/MIT",
   "codeRepository": "https://github.com/alebles/dagr",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -236,6 +258,10 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   }
   .card:hover { border-left-color: var(--cyan); box-shadow: var(--glow-cyan); transform: translateY(-2px); }
+  .faq { display: grid; gap: 18px; margin-top: 8px; }
+  .faq h3 { margin: 0 0 6px; font-size: 1.02em; color: var(--text); }
+  .faq h3::before { content: "? "; color: var(--amber, #ffb347); }
+  .faq p { margin: 0; color: var(--muted); max-width: 72ch; }
   .card h3 { margin: 0 0 6px; font-size: 1.02em; color: var(--text); }
   .card p { margin: 0; color: var(--muted); font-size: 0.92em; line-height: 1.55; }
 
@@ -339,7 +365,8 @@ cargo run --release</pre>
 <pre><span class="comment"># the service hosts the endpoint; it outlives the window</span>
 systemctl --user enable --now dagr
 claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
-  <p class="followup">Bound to localhost at <code>http://127.0.0.1:7331/mcp</code>, and switchable off in Preferences. The same service answers a Unix socket, which is how the <a href="https://github.com/alebles/dms-spotlight-tasks">launcher plugin</a> adds tasks from your desktop.</p>
+  <p class="followup">Bound to localhost at <code>http://127.0.0.1:7331/mcp</code>, and switchable off in Preferences. Any MCP client works — Claude Code, Claude Desktop, Cursor, Zed — over Streamable HTTP. The same service answers a Unix socket, which is how the <a href="https://github.com/alebles/dms-spotlight-tasks">launcher plugin</a> adds tasks from your desktop.</p>
+  <p class="followup">The twenty-one tools: <code>list_tasks</code>, <code>add_task</code>, <code>update_task</code>, <code>delete_task</code>, <code>clear_completed</code>, <code>list_priorities</code>, <code>add_priority</code>, <code>update_priority</code>, <code>reorder_priorities</code>, <code>delete_priority</code>, <code>list_labels</code>, <code>add_label</code>, <code>update_label</code>, <code>delete_label</code>, <code>list_lists</code>, <code>add_list</code>, <code>update_list</code>, <code>reorder_lists</code>, <code>delete_list</code>, <code>get_settings</code>, <code>update_settings</code>.</p>
 </section>
 
 <section id="features">
@@ -354,6 +381,24 @@ claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
     <div class="card"><h3>Adjustable</h3><p>Turn priorities, labels or lists off entirely, choose the sort order, let older days outrank priority, set the default priority and list, pick the size the window opens at — all in Preferences, a page per topic.</p></div>
     <div class="card"><h3>AI-native</h3><p>A background service hosts an MCP endpoint over local HTTP, sharing one database with the window and outliving it. Anything you can do, an assistant can too.</p></div>
     <div class="card"><h3>Native &amp; private</h3><p>GTK 4 + libadwaita, following the system theme and accent. A single local SQLite file. Runs on any Linux desktop, no GNOME shell required.</p></div>
+  </div>
+</section>
+
+<section id="faq">
+  <h2 class="prompt">questions</h2>
+  <div class="faq">
+    <h3>Can an AI assistant manage my to-do list?</h3>
+    <p>Yes. Dagr runs a Model Context Protocol (MCP) server on localhost, so any MCP client — Claude Code, Claude Desktop, Cursor, Zed — can add, complete, re-prioritise, label and file your tasks. It is the same database the window uses, so changes show up in the open app within a second. Point your client at <code>http://127.0.0.1:7331/mcp</code>.</p>
+    <h3>Which to-do apps have an MCP server built in?</h3>
+    <p>Very few. Most MCP task servers are wrappers around a cloud service such as Todoist or Notion, which means an account, an API key and your tasks on someone else's machine. Dagr is a native Linux desktop app whose own background service <em>is</em> the MCP server, over a local SQLite file.</p>
+    <h3>Is my data private, and does it need an account?</h3>
+    <p>No account, no cloud, no telemetry. Everything lives in one SQLite file at <code>~/.local/share/dagr/dagr.db</code>. The MCP endpoint is bound to localhost, has no authentication because nothing outside your machine can reach it, and can be switched off in Preferences.</p>
+    <h3>How does it compare to Errands or GNOME To Do?</h3>
+    <p>Dagr is smaller and deliberately narrower. It was inspired by Errands, and shares the GTK 4 and libadwaita look, but every action is one click and there are no due dates or sub-tasks. What it adds is the MCP server and a Unix socket, so assistants and your desktop launcher can drive it. Errands has CalDAV sync today; Dagr does not, yet.</p>
+    <h3>Does it need GNOME?</h3>
+    <p>No. It is GTK 4 and libadwaita, so it follows your system light or dark style and accent colour, but it runs on any Linux desktop — it is developed on Hyprland. A Flatpak bundle is attached to every release.</p>
+    <h3>Can I use it in Dutch?</h3>
+    <p>Yes. Dagr ships English and Dutch, follows your system language, and takes an override in Preferences.</p>
   </div>
 </section>
 
@@ -373,5 +418,61 @@ claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
 
 </div>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can an AI assistant manage my to-do list?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Dagr runs a Model Context Protocol (MCP) server on localhost, so any MCP client — Claude Code, Claude Desktop, Cursor, Zed — can add, complete, re-prioritise, label and file your tasks. It is the same database the window uses, so changes show up in the open app within a second. Point your client at http://127.0.0.1:7331/mcp."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which to-do apps have an MCP server built in?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Very few. Most MCP task servers are wrappers around a cloud service such as Todoist or Notion, which means an account, an API key and your tasks on someone else's machine. Dagr is a native Linux desktop app whose own background service is the MCP server, over a local SQLite file."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my data private, and does it need an account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No account, no cloud, no telemetry. Everything lives in one SQLite file at ~/.local/share/dagr/dagr.db. The MCP endpoint is bound to localhost, has no authentication because nothing outside your machine can reach it, and can be switched off in Preferences."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does it compare to Errands or GNOME To Do?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dagr is smaller and deliberately narrower. It was inspired by Errands, and shares the GTK 4 and libadwaita look, but every action is one click and there are no due dates or sub-tasks. What it adds is the MCP server and a Unix socket, so assistants and your desktop launcher can drive it. Errands has CalDAV sync today; Dagr does not, yet."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it need GNOME?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. It is GTK 4 and libadwaita, so it follows your system light or dark style and accent colour, but it runs on any Linux desktop — it is developed on Hyprland. A Flatpak bundle is attached to every release."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use it in Dutch?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Dagr ships English and Dutch, follows your system language, and takes an override in Preferences."
+      }
+    }
+  ]
+}
+</script>
 </body>
 </html>
