@@ -119,6 +119,8 @@ Dagr speaks English and Dutch. It follows the system language by default and tak
 
 Every string lives in [`locales/app.yml`](locales/app.yml), English and Dutch side by side, so adding a language is one column in one file plus a line in `SUPPORTED` in `src/i18n.rs`. A test walks that file and fails if any string is missing a translation. The names seeded into a new database - the "Tasks" list, the High/Medium/Low/None priorities - are translated once, when the database is created; after that they are your data and changing language leaves them alone. Strings an assistant reads (MCP tool descriptions, API errors) stay English on purpose: they are an interface contract.
 
+Changes are listed in [CHANGELOG.md](CHANGELOG.md), and [AGENTS.md](AGENTS.md) is the briefing for coding agents working on this repository.
+
 ## The background service
 
 `dagr serve` runs without a window. It hosts the MCP endpoint and answers a Unix socket at `$XDG_RUNTIME_DIR/dagr/dagr.sock`. Everything below - AI access and desktop integration - goes through it, so set it up first.

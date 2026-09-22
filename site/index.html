@@ -319,7 +319,7 @@
       </div>
     </div>
   </div>
-  <p class="caption">Priorities are user-defined; the order you set is the order the list sorts.</p>
+  <p class="caption">Priorities are user-defined; the order you set is the order the list sorts. Labels and lists are switched off here, which is how Dagr arrives.</p>
 </section>
 
 <section id="quickstart">
@@ -347,8 +347,11 @@ claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
   <div class="card-list">
     <div class="card"><h3>One click for everything</h3><p>Complete, rename, re-prioritize, or delete — no menu, no confirmation dialog. Deletes offer Undo in a toast instead of asking first.</p></div>
     <div class="card"><h3>Priority-ordered</h3><p>User-defined levels with names and colors. The order you set is the order the list sorts; drag the grip or use the arrows to change it.</p></div>
-    <div class="card"><h3>Type to add</h3><p>The entry is focused on launch. Type and press Enter; a leading <code>!</code>, <code>!!</code>, <code>!!!</code> bumps the new task's priority.</p></div>
-    <div class="card"><h3>Adjustable</h3><p>Turn priorities off entirely, choose the sort order, let older days outrank priority, tag tasks with colored labels, split them across lists, set the default priority for new tasks, pick the size the window opens at — all in Preferences.</p></div>
+    <div class="card"><h3>Type to add</h3><p>The entry is focused on launch. Type and press Enter. Before the task itself, a leading <code>!</code>, <code>!!</code>, <code>!!!</code> bumps its priority, a <code>#tag</code> labels it, and an <code>@list</code> files it.</p></div>
+    <div class="card"><h3>Labels</h3><p>Optional colored tags, as many per task as you like, shown as dots on the row and picked in a click. Type <code>#tag</code> to attach one as you go. Off until you turn them on.</p></div>
+    <div class="card"><h3>Lists</h3><p>Optional sidebar of lists, with “All tasks” on top. Add, rename, reorder and remove them there; deleting one moves its tasks rather than dropping them. Off until you turn them on.</p></div>
+    <div class="card"><h3>English and Dutch</h3><p>Follows your system language, with an override in Preferences. Every string lives in one file, so a new language is one column.</p></div>
+    <div class="card"><h3>Adjustable</h3><p>Turn priorities, labels or lists off entirely, choose the sort order, let older days outrank priority, set the default priority and list, pick the size the window opens at — all in Preferences, a page per topic.</p></div>
     <div class="card"><h3>AI-native</h3><p>A background service hosts an MCP endpoint over local HTTP, sharing one database with the window and outliving it. Anything you can do, an assistant can too.</p></div>
     <div class="card"><h3>Native &amp; private</h3><p>GTK 4 + libadwaita, following the system theme and accent. A single local SQLite file. Runs on any Linux desktop, no GNOME shell required.</p></div>
   </div>
