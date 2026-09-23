@@ -12,7 +12,7 @@
   <a href="https://dagr.bles.nu"><img src="https://img.shields.io/badge/site-dagr.bles.nu-d97706.svg" alt="Site"></a>
 </p>
 
-A tiny, keyboard-first task list for Linux. One window, one priority-ordered list, and everything a single click away - plus a background service that lets an AI assistant, or your desktop, do anything you can.
+A tiny, keyboard-first task list for Linux and macOS. One window, one priority-ordered list, and everything a single click away - plus a background service that lets an AI assistant, or your desktop, do anything you can.
 
 > _"Skinfaxi they name the steed that draws the shining day over mankind — brightest of horses he seems to men, and ever his mane is aflame with light."_
 > — Vafþrúðnismál, of the horse that bears Dagr across the sky
@@ -33,12 +33,21 @@ A tiny, keyboard-first task list for Linux. One window, one priority-ordered lis
 - **AI-native** - a background service hosts an MCP endpoint over local HTTP, sharing one database with the open window and outliving it.
 - **Scriptable from your desktop** - the same service answers a Unix socket, which is how the [launcher plugin](https://github.com/alebles/dms-spotlight-tasks) adds tasks from a spotlight search.
 - **English and Dutch** - the app follows your system language, with an override in Preferences.
-- **Native GNOME look** - GTK 4 + libadwaita, following the system light/dark style and accent color. Runs on any Linux desktop (developed on Hyprland), no GNOME shell required.
+- **Native GNOME look** - GTK 4 + libadwaita, following the system light/dark style and accent color. Runs on any Linux desktop (developed on Hyprland), no GNOME shell required, and on macOS through Homebrew.
 - **Local and private** - a single SQLite file in your data directory. No account, no cloud, no telemetry.
 
 ## Install
 
-Dagr is **not on Flathub**, and not in any distro repository. Releases live on GitHub.
+Dagr is **not on Flathub**, and not in any distro repository. Releases live on GitHub, with a Homebrew tap for macOS.
+
+### macOS (Homebrew)
+
+```bash
+brew install alebles/tap/dagr
+dagr
+```
+
+Homebrew builds it from source against its own GTK 4 and libadwaita. Start the background service with your login using `brew services start dagr` - see [The background service](#the-background-service).
 
 ### Flatpak
 
@@ -69,6 +78,7 @@ Needs a Rust toolchain and the GTK 4 / libadwaita development files.
 sudo dnf install rust cargo gtk4-devel libadwaita-devel   # Fedora
 sudo apt install cargo libgtk-4-dev libadwaita-1-dev      # Debian / Ubuntu
 sudo pacman -S rust gtk4 libadwaita                       # Arch
+brew install rust gtk4 libadwaita pkgconf                 # macOS
 
 cargo run --release
 ```
@@ -115,7 +125,7 @@ The window opens with the entry focused. Type a task, press Enter, and keep goin
 
 ## Languages
 
-Dagr speaks English and Dutch. It follows the system language by default and takes an override in Preferences → Settings → Language, which applies the next time it starts - the toolkit picks its own language once, at launch.
+Dagr speaks English and Dutch. It follows the system language by default (on macOS, the order in System Settings → General → Language & Region) and takes an override in Preferences → Settings → Language, which applies the next time it starts - the toolkit picks its own language once, at launch.
 
 Every string lives in [`locales/app.yml`](locales/app.yml), English and Dutch side by side, so adding a language is one column in one file plus a line in `SUPPORTED` in `src/i18n.rs`. A test walks that file and fails if any string is missing a translation. The names seeded into a new database - the "Tasks" list, the High/Medium/Low/None priorities - are translated once, when the database is created; after that they are your data and changing language leaves them alone. Strings an assistant reads (MCP tool descriptions, API errors) stay English on purpose: they are an interface contract.
 
@@ -123,7 +133,7 @@ Changes are listed in [CHANGELOG.md](CHANGELOG.md), and [AGENTS.md](AGENTS.md) i
 
 ## The background service
 
-`dagr serve` runs without a window. It hosts the MCP endpoint and answers a Unix socket at `$XDG_RUNTIME_DIR/dagr/dagr.sock`. Everything below - AI access and desktop integration - goes through it, so set it up first.
+`dagr serve` runs without a window. It hosts the MCP endpoint and answers a Unix socket at `$XDG_RUNTIME_DIR/dagr/dagr.sock` (on macOS, `$TMPDIR/dagr/dagr.sock`). Everything below - AI access and desktop integration - goes through it, so set it up first.
 
 The window starts one on demand if none is running, and it outlives the window being closed - but not a logout or a reboot. To have it come back on its own, run:
 
@@ -131,7 +141,7 @@ The window starts one on demand if none is running, and it outlives the window b
 dagr setup
 ```
 
-That prints the exact steps for your install, because they differ: a Flatpak needs the PATH shim above and a different `ExecStart`. What it amounts to is a systemd user service:
+That prints the exact steps for your install, because they differ: a Flatpak needs the PATH shim above and a different `ExecStart`. On Linux what it amounts to is a systemd user service:
 
 ```bash
 mkdir -p ~/.config/systemd/user
@@ -140,6 +150,14 @@ systemctl --user enable --now dagr
 
 dagr status        # which database, the MCP url, and whether anything is answering
 ```
+
+On macOS it is a launchd agent instead. A Homebrew install already carries one:
+
+```bash
+brew services start dagr
+```
+
+Otherwise `dagr serve --print-unit` prints the agent's plist, which `dagr setup` shows how to load with `launchctl bootstrap`.
 
 `dagr status` decides by connecting to the socket rather than by looking for a status file, so it stays honest after a hard kill - which is what stopping the Flatpak service is, since `--die-with-parent` leaves no chance to clean up.
 
@@ -180,12 +198,12 @@ cargo clippy --all-targets -- -D warnings # what CI enforces
 cargo fmt --check
 ```
 
-Integration tests in `tests/` drive a real `dagr serve` over its socket and over MCP, and need no display. CI runs fmt, clippy, and the tests on every push, and builds a Flatpak bundle.
+Integration tests in `tests/` drive a real `dagr serve` over its socket and over MCP, and need no display. CI runs fmt, clippy, and the tests on every push, on Linux and macOS, and builds a Flatpak bundle.
 
 Schema changes are made in place - there are no migrations before the first release. To start over, stop the service first, since it holds the database open:
 
 ```bash
-systemctl --user stop dagr
+systemctl --user stop dagr            # or on macOS: brew services stop dagr
 rm ~/.local/share/dagr/dagr.db        # or ~/.var/app/nu.bles.dagr/data/dagr/dagr.db
 ```
 

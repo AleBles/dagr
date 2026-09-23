@@ -12,7 +12,7 @@ const APP_ID: &str = "nu.bles.dagr";
 
 fn main() -> glib::ExitCode {
     // Pick the mode before anything else: the windowless ones must not touch
-    // GTK, so they can run under systemd with no display.
+    // GTK, so they can run under systemd or launchd with no display.
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("serve") if args.iter().any(|a| a == "--print-unit") => {
@@ -29,7 +29,7 @@ fn main() -> glib::ExitCode {
     if args.iter().any(|arg| arg == "--mcp") {
         eprintln!(
             "dagr: --mcp has been removed. The MCP server now runs in the background \
-             service.\n      Start it with:  systemctl --user enable --now dagr\n      \
+             service.\n      For how to start it with your session, run:  dagr setup\n      \
              Then point clients at the url from:  dagr status"
         );
         return glib::ExitCode::FAILURE;

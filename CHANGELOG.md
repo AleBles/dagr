@@ -6,6 +6,16 @@ them lives in the commits.
 Nothing has been released yet, so everything below is unreleased; the dated
 headings are the points the work landed in the repository.
 
+## 2026-09-23 — macOS
+
+### Added
+
+- **macOS support.** Builds against Homebrew's GTK 4 and libadwaita and
+  installs with `brew install alebles/tap/dagr`. The background service runs as
+  a launchd agent (`brew services start dagr`, or the plist
+  `dagr serve --print-unit` now prints there), its socket lives under
+  `$TMPDIR`, and the system language comes from macOS's own language list.
+
 ## 2026-09-22 — major UX improvements
 
 ### Added

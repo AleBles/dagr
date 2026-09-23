@@ -18,6 +18,7 @@ This file is for any coding agent. Claude Code, Codex and the rest all read
 | `src/task.rs` | Domain types and the `!`/`#tag`/`@list` parser. |
 | `src/ui/` | The window, the task row, and `preferences/` (one module per page). |
 | `src/i18n.rs`, `locales/app.yml` | Language selection and every user-facing string. |
+| `build-aux/homebrew/dagr.rb` | The Homebrew formula; the live copy is in `alebles/homebrew-tap`. |
 
 ## House rules
 
@@ -39,6 +40,11 @@ This file is for any coding agent. Claude Code, Codex and the rest all read
 - **The UI rebuilds, it does not sync.** Every change writes to SQLite, reloads
   and rebuilds the list. Row callbacks defer through `Ctx::later` so a widget is
   never destroyed inside its own signal handler.
+- **Linux and macOS both build.** The differences sit behind
+  `cfg(target_os = "macos")` in three places: `paths.rs` (socket under
+  `$TMPDIR`), `serve.rs` (launchd instead of systemd) and `i18n.rs`
+  (`AppleLanguages`). CI runs clippy and the tests on both, so a platform-only
+  item that goes unused on the other fails the build.
 - Exhaustive struct literals in tests (`Settings`, the params `patch()` helper)
   break when a field is added. That is the point; update them.
 
@@ -58,6 +64,9 @@ background service and its own socket:
 ```bash
 XDG_DATA_HOME=/tmp/scratch/data DAGR_SOCKET=/tmp/scratch/dagr.sock cargo run
 ```
+
+On macOS `$XDG_DATA_HOME` works the same way; the socket defaults to
+`$TMPDIR/dagr/` rather than a runtime directory.
 
 Drive that instance over the socket with newline-delimited JSON (`add_task`,
 `update_settings`, `list_tasks`, …) — the quickest way to set up state without

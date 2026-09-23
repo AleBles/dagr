@@ -34,6 +34,11 @@ use crate::proto::{line, Event, Method, Request, Response, PROTOCOL};
 /// How often we look for writes made by the window or any other connection.
 const WATCH_INTERVAL: Duration = Duration::from_millis(250);
 
+/// The launchd job name, which is also the plist's file name. The app id, so
+/// it reads as ours in `launchctl list`.
+#[cfg(target_os = "macos")]
+const LAUNCHD_LABEL: &str = "nu.bles.dagr";
+
 /// Runs until SIGTERM or SIGINT. Returns `Ok` if another service already owns
 /// the socket, so racing starts are harmless.
 pub fn run() -> Result<()> {
@@ -366,6 +371,7 @@ pub fn setup_command() -> String {
 
 /// `dagr setup`: everything needed to get the service running at login, spelled
 /// out for whichever install this is.
+#[cfg(not(target_os = "macos"))]
 pub fn setup() -> Result<()> {
     let url = mcp_url();
     match reached() {
@@ -416,6 +422,52 @@ Check it worked with:  dagr status
     Ok(())
 }
 
+/// `dagr setup` on macOS, where launchd plays the part of systemd.
+///
+/// A Homebrew install gets `brew services`, because the formula already
+/// carries the agent and keeps it pointing at the right version across
+/// upgrades. Anything else writes the agent by hand.
+#[cfg(target_os = "macos")]
+pub fn setup() -> Result<()> {
+    let url = mcp_url();
+    let exe = own_exe();
+    if exe.to_string_lossy().contains("/Cellar/dagr/") {
+        print!(
+            "\
+1. Start the background service with your session, so the MCP endpoint and the
+   socket are there without opening the window:
+
+     brew services start dagr
+
+2. Point an AI client at the MCP endpoint:
+
+     claude mcp add --transport http dagr {url}
+
+Check it worked with:  dagr status
+"
+        );
+    } else {
+        print!(
+            "\
+1. Start the background service with your session, so the MCP endpoint and the
+   socket are there without opening the window:
+
+     mkdir -p ~/Library/LaunchAgents
+     {exe} serve --print-unit > ~/Library/LaunchAgents/{LAUNCHD_LABEL}.plist
+     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/{LAUNCHD_LABEL}.plist
+
+2. Point an AI client at the MCP endpoint:
+
+     claude mcp add --transport http dagr {url}
+
+Check it worked with:  dagr status
+",
+            exe = exe.display()
+        );
+    }
+    Ok(())
+}
+
 /// Prints a systemd user unit pointing at however this binary is reached, so
 /// the service (and with it the MCP endpoint) starts with the session.
 ///
@@ -427,6 +479,7 @@ Check it worked with:  dagr status
 /// process carries on holding the lock and the socket: systemd reports the
 /// service stopped, a restart finds the lock taken and exits 0, and an
 /// orphaned copy quietly keeps serving.
+#[cfg(not(target_os = "macos"))]
 pub fn print_unit() -> Result<()> {
     let exec = match reached() {
         Reached::Flatpak { id } => {
@@ -451,6 +504,75 @@ WantedBy=default.target
 "
     );
     Ok(())
+}
+
+/// Prints a launchd agent, the macOS counterpart of the systemd unit.
+///
+/// `KeepAlive` with `SuccessfulExit = false` is `Restart=on-failure`: a crash
+/// is restarted, while a second copy that finds the lock taken exits 0 and is
+/// left alone.
+#[cfg(target_os = "macos")]
+pub fn print_unit() -> Result<()> {
+    let exe = own_exe();
+    let exe = stable_exe(&exe.to_string_lossy());
+    let log = std::env::var("HOME")
+        .map(|home| format!("{home}/Library/Logs/dagr.log"))
+        .unwrap_or_else(|_| "/tmp/dagr.log".to_string());
+    print!(
+        "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+  <key>Label</key>
+  <string>{LAUNCHD_LABEL}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{exe}</string>
+    <string>serve</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardErrorPath</key>
+  <string>{log}</string>
+</dict>
+</plist>
+"
+    );
+    Ok(())
+}
+
+/// Our own binary. There is no Flatpak on macOS, so this is always native.
+///
+/// Resolved through symlinks, because macOS reports the path we were started
+/// by: `/opt/homebrew/bin/dagr`, not the Cellar copy that says Homebrew.
+#[cfg(target_os = "macos")]
+fn own_exe() -> PathBuf {
+    let exe = match reached() {
+        Reached::Native { exe } => exe,
+        Reached::Flatpak { .. } => PathBuf::from("dagr"),
+    };
+    fs::canonicalize(&exe).unwrap_or(exe)
+}
+
+/// A Homebrew binary runs from a versioned Cellar path that disappears on the
+/// next upgrade; the `opt` link next to it always points at the current one.
+#[cfg(any(target_os = "macos", test))]
+fn stable_exe(exe: &str) -> String {
+    let Some((prefix, rest)) = exe.split_once("/Cellar/dagr/") else {
+        return exe.to_string();
+    };
+    match rest.split_once('/') {
+        Some((_version, tail)) => format!("{prefix}/opt/dagr/{tail}"),
+        None => exe.to_string(),
+    }
 }
 
 // --- status ----------------------------------------------------------------
@@ -569,7 +691,7 @@ pub fn mcp_status() -> crate::mcp_http::Status {
 }
 
 /// Starts a service if none is running, so switching the endpoint on in
-/// Preferences works before anyone has set up the systemd unit. Detached on
+/// Preferences works before anyone has set up the login service. Detached on
 /// purpose: it has to outlive the window.
 pub fn ensure_running() -> Result<()> {
     if info().is_some() {
@@ -614,5 +736,14 @@ mod tests {
         assert_eq!(info_at(&socket, &info).unwrap()["db"], "/tmp/x.db");
 
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_homebrew_binary_is_reached_through_its_opt_link() {
+        assert_eq!(
+            stable_exe("/opt/homebrew/Cellar/dagr/0.2.0/bin/dagr"),
+            "/opt/homebrew/opt/dagr/bin/dagr"
+        );
+        assert_eq!(stable_exe("/usr/local/bin/dagr"), "/usr/local/bin/dagr");
     }
 }

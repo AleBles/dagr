@@ -39,6 +39,28 @@ jobs:
       - name: Test
         run: cargo test --locked -- --nocapture
 
+  macos:
+    name: macOS · clippy · test
+    runs-on: macos-latest
+    steps:
+      - name: Install GTK
+        run: brew install gtk4 libadwaita pkgconf
+
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo registry and build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --locked -- --nocapture
+
   flatpak:
     name: flatpak bundle
     runs-on: ubuntu-latest
