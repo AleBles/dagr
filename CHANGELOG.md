@@ -15,6 +15,8 @@ headings are the points the work landed in the repository.
   a launchd agent (`brew services start dagr`, or the plist
   `dagr serve --print-unit` now prints there), its socket lives under
   `$TMPDIR`, and the system language comes from macOS's own language list.
+  The formula builds a `Dagr.app` to copy into `~/Applications`, so it shows
+  up in Spotlight and Launchpad.
 
 ## 2026-09-22 — major UX improvements
 

@@ -24,6 +24,28 @@ class Dagr < Formula
     system "cargo", "install", *std_cargo_args
     (share/"icons/hicolor/scalable/apps").install "data/icons/hicolor/scalable/apps/nu.bles.dagr.svg"
     (share/"icons/hicolor/symbolic/apps").install "data/icons/hicolor/symbolic/apps/nu.bles.dagr-symbolic.svg"
+
+    # A Dagr.app, because Spotlight and Launchpad only find app bundles. Its
+    # launcher execs the `opt` binary rather than holding a copy, so the bundle
+    # copied into ~/Applications (see caveats) keeps working across upgrades.
+    contents = prefix/"Dagr.app/Contents"
+    contents.install "data/macos/Info.plist"
+    inreplace contents/"Info.plist", "@VERSION@", version.to_s
+    (contents/"Resources").install "data/macos/dagr.icns"
+    (contents/"MacOS/dagr").write <<~SH
+      #!/bin/sh
+      exec "#{opt_bin}/dagr" "$@"
+    SH
+    chmod 0755, contents/"MacOS/dagr"
+  end
+
+  # Homebrew may not write outside its prefix, so this one step is yours.
+  def caveats
+    <<~EOS
+      To find Dagr in Spotlight and Launchpad, copy the app into place once:
+        cp -R #{opt_prefix}/Dagr.app ~/Applications/
+      It starts the Homebrew binary, so upgrades need no new copy.
+    EOS
   end
 
   # `brew services start dagr` runs the background service at login, which is

@@ -44,8 +44,10 @@ Dagr is **not on Flathub**, and not in any distro repository. Releases live on G
 
 ```bash
 brew install alebles/tap/dagr
-dagr
+cp -R "$(brew --prefix)/opt/dagr/Dagr.app" ~/Applications/   # once, for Spotlight and Launchpad
 ```
+
+The copied `Dagr.app` only starts the Homebrew binary, so upgrades need no new copy. `dagr` from a terminal works too.
 
 Homebrew builds it from source against its own GTK 4 and libadwaita. Start the background service with your login using `brew services start dagr` - see [The background service](#the-background-service).
 
