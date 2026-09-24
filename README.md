@@ -38,39 +38,19 @@ A tiny, keyboard-first task list for Linux and macOS. One window, one priority-o
 
 ## Install
 
-Dagr is **not on Flathub**, and not in any distro repository. Releases live on GitHub, with a Homebrew tap for macOS.
-
-### macOS (Homebrew)
-
 ```bash
-brew install alebles/tap/dagr
-cp -R "$(brew --prefix)/opt/dagr/Dagr.app" ~/Applications/   # once, for Spotlight and Launchpad
+curl -fsSL https://raw.githubusercontent.com/AleBles/dagr/main/install.sh | bash
 ```
 
-The copied `Dagr.app` only starts the Homebrew binary, so upgrades need no new copy. `dagr` from a terminal works too.
+No sudo, and running it again updates. 
+On **Linux** it installs the Flatpak bundle from the [latest release](https://github.com/AleBles/dagr/releases/latest) - Flathub is only used for the GNOME runtime it needs - and adds a `dagr` command to `~/.local/bin`. 
+On **macOS** it installs from the Homebrew tap, which builds from source, and copies `Dagr.app` into `~/Applications` so Spotlight and Launchpad find it. 
 
-Homebrew builds it from source against its own GTK 4 and libadwaita. Start the background service with your login using `brew services start dagr` - see [The background service](#the-background-service).
+[The script](install.sh) is short; read it first if you like.
 
-### Flatpak
+Dagr is not on Flathub or in any distro repository.
 
-Every tagged release attaches a sandboxed `dagr.flatpak` bundle built by CI. Download it from the [latest release](https://github.com/alebles/dagr/releases/latest) and install the file directly:
-
-```bash
-# Flathub is only used for the GNOME runtime the bundle needs, not for Dagr itself
-flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user dagr.flatpak
-flatpak run nu.bles.dagr
-```
-
-**A Flatpak install puts no `dagr` command on your PATH.** Worth knowing before anything else here makes sense: every `dagr …` line below assumes one exists. Make one:
-
-```bash
-mkdir -p ~/.local/bin
-printf '#!/bin/sh\nexec flatpak run nu.bles.dagr "$@"\n' > ~/.local/bin/dagr
-chmod +x ~/.local/bin/dagr
-```
-
-Tasks live in `~/.var/app/nu.bles.dagr/data/dagr/dagr.db`. Note that a source build uses `~/.local/share/dagr/dagr.db` instead, so running both gives you two separate lists - `dagr status` prints which one is being served.
+A Flatpak keeps its tasks in `~/.var/app/nu.bles.dagr/data/dagr/dagr.db`, while a source build uses `~/.local/share/dagr/dagr.db`, so running both gives you two separate lists - `dagr status` prints which one is being served.
 
 ### From source
 
@@ -143,7 +123,7 @@ The window starts one on demand if none is running, and it outlives the window b
 dagr setup
 ```
 
-That prints the exact steps for your install, because they differ: a Flatpak needs the PATH shim above and a different `ExecStart`. On Linux what it amounts to is a systemd user service:
+That prints the exact steps for your install, because they differ: a Flatpak runs through the `dagr` wrapper `install.sh` puts in `~/.local/bin`, and needs a different `ExecStart`. On Linux what it amounts to is a systemd user service:
 
 ```bash
 mkdir -p ~/.config/systemd/user

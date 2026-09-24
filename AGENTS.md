@@ -18,6 +18,7 @@ This file is for any coding agent. Claude Code, Codex and the rest all read
 | `src/task.rs` | Domain types and the `!`/`#tag`/`@list` parser. |
 | `src/ui/` | The window, the task row, and `preferences/` (one module per page). |
 | `src/i18n.rs`, `locales/app.yml` | Language selection and every user-facing string. |
+| `install.sh` | The one-line installer the README and site point at. |
 | `build-aux/homebrew/dagr.rb` | The Homebrew formula; the live copy is in `alebles/homebrew-tap`. |
 
 ## House rules
@@ -84,6 +85,15 @@ delete confirmation — cannot be automated here; say plainly that it was left
 for a human rather than implying it was tested.
 
 ## Flatpak
+
+To try `install.sh` without touching the real installation, give it a scratch
+home and a scratch Flatpak user directory. It then downloads and installs the
+real latest release into those; the GNOME runtime, if it is installed
+system-wide, is shared rather than downloaded again:
+
+```bash
+env HOME=/tmp/scratch/home FLATPAK_USER_DIR=/tmp/scratch/flatpak bash install.sh
+```
 
 `./build-aux/install-flatpak.sh` builds and installs it. After changing
 dependencies, regenerate the vendored sources or the sandboxed offline build

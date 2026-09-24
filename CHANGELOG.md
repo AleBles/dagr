@@ -7,6 +7,15 @@ Releases are tagged `vX.Y.Z` on GitHub, each with a Flatpak bundle attached and
 a Homebrew formula in `alebles/tap`. The dated headings mark when work landed;
 everything below it went out in the first tagged release, v0.2.0.
 
+## Unreleased
+
+### Added
+
+- **One-line install.** `curl -fsSL …/install.sh | bash` installs the Flatpak
+  on Linux or the Homebrew formula on macOS, with no sudo, and running it again
+  updates. A `dagr` command left over from before the app id changed is pointed
+  at the new one.
+
 ## 2026-09-23 — macOS
 
 ### Added
