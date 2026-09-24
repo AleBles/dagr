@@ -40,7 +40,7 @@ jobs:
           cache-key: flatpak-builder-${{ github.sha }}
 
       - name: Attach the bundle to the release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dagr.flatpak
           fail_on_unmatched_files: true
@@ -69,7 +69,7 @@ jobs:
           cat dagr.rb
 
       - name: Attach the formula to the release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dagr.rb
           fail_on_unmatched_files: true
