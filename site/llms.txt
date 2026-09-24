@@ -1,11 +1,13 @@
 # dagr
 
-> A small, priority-ordered to-do app for Linux (GTK 4 + libadwaita) that ships
+> A small, priority-ordered to-do app for Linux and macOS (GTK 4 + libadwaita) that ships
 > a Model Context Protocol server, so an AI assistant can read and change your
 > tasks on the same local SQLite file the window uses.
 
-Free and open source (MIT). No account, no cloud, no telemetry. Developed on
-Linux; packaged as a Flatpak.
+Free and open source (MIT). No account, no cloud, no telemetry. Runs on Linux
+(as a Flatpak) and macOS (through Homebrew); one command installs either:
+
+    curl -fsSL https://raw.githubusercontent.com/AleBles/dagr/main/install.sh | bash
 
 ## What it is
 
@@ -21,6 +23,8 @@ Linux; packaged as a Flatpak.
 - The background service (`dagr serve`) hosts an MCP server over Streamable
   HTTP at `http://127.0.0.1:7331/mcp`, bound to localhost. Add it with:
   `claude mcp add --transport http dagr http://127.0.0.1:7331/mcp`
+- To keep it running at login, `dagr setup` prints the steps for the install it
+  finds: a systemd user unit on Linux, `brew services start dagr` on macOS.
 - Twenty-one tools: list_tasks, add_task, update_task, delete_task,
   clear_completed, list_priorities, add_priority, update_priority,
   reorder_priorities, delete_priority, list_labels, add_label, update_label,
@@ -29,10 +33,12 @@ Linux; packaged as a Flatpak.
 - Priorities, labels and lists can be given by name or id. Changes appear in the
   running window within a second, because both read one SQLite file.
 - The same service answers a Unix socket at `$XDG_RUNTIME_DIR/dagr/dagr.sock`
-  with newline-delimited JSON, for desktop scripting.
+  (on macOS `$TMPDIR/dagr/dagr.sock`) with newline-delimited JSON, for
+  desktop scripting.
 
 ## Links
 
 - Site: https://dagr.bles.nu
 - Source: https://github.com/alebles/dagr
-- Releases (Flatpak bundle): https://github.com/alebles/dagr/releases/latest
+- Releases (Flatpak bundle): https://github.com/AleBles/dagr/releases/latest
+- Homebrew tap: https://github.com/AleBles/homebrew-tap (`brew install alebles/tap/dagr`)

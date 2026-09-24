@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>dagr — a Linux task list with a built-in MCP server</title>
-<meta name="description" content="Dagr is a small, priority-ordered to-do app for Linux, built with GTK 4 and libadwaita. It ships a Model Context Protocol (MCP) server, so Claude, Cursor, Zed or any MCP client can read and change your tasks — add, complete, label and re-prioritise — while the window stays in sync.">
+<title>dagr — a task list for Linux and macOS with a built-in MCP server</title>
+<meta name="description" content="Dagr is a small, priority-ordered to-do app for Linux and macOS, built with GTK 4 and libadwaita. It ships a Model Context Protocol (MCP) server, so Claude, Cursor, Zed or any MCP client can read and change your tasks — add, complete, label and re-prioritise — while the window stays in sync.">
 <meta name="keywords" content="dagr, task list, todo, linux, gtk4, libadwaita, rust, gnome, mcp, model context protocol, ai tasks">
 
 <link rel="canonical" href="https://dagr.bles.nu/">
@@ -13,7 +13,7 @@
 
 <meta name="theme-color" content="#0b0a1a">
 
-<meta property="og:title" content="dagr — a Linux task list with a built-in MCP server">
+<meta property="og:title" content="dagr — a task list for Linux and macOS with a built-in MCP server">
 <meta property="og:description" content="Priority-ordered, one click for everything, and a built-in MCP server so an assistant can do anything you can.">
 <meta property="og:url" content="https://dagr.bles.nu/">
 <meta property="og:site_name" content="dagr">
@@ -25,7 +25,7 @@
 <meta property="og:image:alt" content="The Dagr window listing six tasks with colored priority dots, beside the dagr wordmark">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="dagr — a Linux task list with a built-in MCP server">
+<meta name="twitter:title" content="dagr — a task list for Linux and macOS with a built-in MCP server">
 <meta name="twitter:description" content="Priority-ordered, one click for everything, and a built-in MCP server so an assistant can do anything you can.">
 <meta name="twitter:image" content="https://dagr.bles.nu/share.png">
 <meta name="twitter:image:alt" content="The Dagr window listing six tasks with colored priority dots, beside the dagr wordmark">
@@ -35,10 +35,10 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "dagr",
-  "description": "A tiny, priority-ordered task list for Linux built with GTK 4 and libadwaita, with a built-in MCP server.",
+  "description": "A tiny, priority-ordered task list for Linux and macOS built with GTK 4 and libadwaita, with a built-in MCP server.",
   "url": "https://dagr.bles.nu/",
   "applicationCategory": "Productivity",
-  "operatingSystem": "Linux",
+  "operatingSystem": "Linux, macOS",
   "applicationSubCategory": "Task management",
   "softwareVersion": "0.2.0",
   "isAccessibleForFree": true,
@@ -52,6 +52,7 @@
     "Built-in MCP server for AI assistants",
     "Unix socket for desktop scripting",
     "English and Dutch",
+    "One-command install: Flatpak on Linux, Homebrew on macOS",
     "Local SQLite storage, no account and no cloud"
   ],
   "license": "https://opensource.org/license/MIT",
@@ -319,7 +320,7 @@
     <line class="cross" x1="0" y1="140" x2="104" y2="0" stroke-width="14" stroke-linecap="round"/>
   </svg>
   <h1>dagr</h1>
-  <p class="tagline">A tiny, keyboard-first task list for Linux. One priority-ordered list, everything a single click away — and a built-in MCP server, so an AI assistant can do anything you can.</p>
+  <p class="tagline">A tiny, keyboard-first task list for Linux and macOS. One priority-ordered list, everything a single click away — and a built-in MCP server, so an AI assistant can do anything you can.</p>
   <div class="cta-row">
     <a class="cta cta-primary" href="https://github.com/alebles/dagr">View on GitHub →</a>
     <a class="cta cta-secondary" href="#quickstart">Quick start</a>
@@ -350,20 +351,17 @@
 
 <section id="quickstart">
   <h2 class="prompt">quick start</h2>
-<pre><span class="comment"># Fedora — swap for your distro's GTK 4 + libadwaita dev packages</span>
-sudo dnf install rust cargo gtk4-devel libadwaita-devel
-
-git clone https://github.com/alebles/dagr
-cd dagr
-cargo run --release</pre>
-  <p class="followup">Tasks live in a single SQLite file at <code>~/.local/share/dagr/dagr.db</code>. No account, no cloud, no telemetry. A Flatpak manifest is included for a sandboxed build.</p>
+<pre><span class="comment"># Linux (Flatpak) or macOS (Homebrew) — no sudo, run it again to update</span>
+curl -fsSL https://raw.githubusercontent.com/AleBles/dagr/main/install.sh | bash</pre>
+  <p class="followup">On Linux it installs the Flatpak bundle from the latest release and adds a <code>dagr</code> command; on macOS it installs from the Homebrew tap and adds Dagr.app to your Applications. Tasks live in a single local SQLite file — no account, no cloud, no telemetry. Rather build it yourself? The <a href="https://github.com/AleBles/dagr#from-source">README</a> has the steps.</p>
 </section>
 
 <section id="ai">
   <h2 class="prompt">scriptable by ai</h2>
   <p class="lead">Dagr's background service is a <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server. Every action in the app is a tool, on the same database — so an assistant's changes appear in the open window within a second.</p>
-<pre><span class="comment"># the service hosts the endpoint; it outlives the window</span>
-systemctl --user enable --now dagr
+<pre><span class="comment"># the service hosts the endpoint and outlives the window;</span>
+<span class="comment"># this prints how to start it at login, for your system</span>
+dagr setup
 claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
   <p class="followup">Bound to localhost at <code>http://127.0.0.1:7331/mcp</code>, and switchable off in Preferences. Any MCP client works — Claude Code, Claude Desktop, Cursor, Zed — over Streamable HTTP. The same service answers a Unix socket, which is how the <a href="https://github.com/alebles/dms-spotlight-tasks">launcher plugin</a> adds tasks from your desktop.</p>
   <p class="followup">The twenty-one tools: <code>list_tasks</code>, <code>add_task</code>, <code>update_task</code>, <code>delete_task</code>, <code>clear_completed</code>, <code>list_priorities</code>, <code>add_priority</code>, <code>update_priority</code>, <code>reorder_priorities</code>, <code>delete_priority</code>, <code>list_labels</code>, <code>add_label</code>, <code>update_label</code>, <code>delete_label</code>, <code>list_lists</code>, <code>add_list</code>, <code>update_list</code>, <code>reorder_lists</code>, <code>delete_list</code>, <code>get_settings</code>, <code>update_settings</code>.</p>
@@ -380,7 +378,7 @@ claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
     <div class="card"><h3>English and Dutch</h3><p>Follows your system language, with an override in Preferences. Every string lives in one file, so a new language is one column.</p></div>
     <div class="card"><h3>Adjustable</h3><p>Turn priorities, labels or lists off entirely, choose the sort order, let older days outrank priority, set the default priority and list, pick the size the window opens at — all in Preferences, a page per topic.</p></div>
     <div class="card"><h3>AI-native</h3><p>A background service hosts an MCP endpoint over local HTTP, sharing one database with the window and outliving it. Anything you can do, an assistant can too.</p></div>
-    <div class="card"><h3>Native &amp; private</h3><p>GTK 4 + libadwaita, following the system theme and accent. A single local SQLite file. Runs on any Linux desktop, no GNOME shell required.</p></div>
+    <div class="card"><h3>Native &amp; private</h3><p>GTK 4 + libadwaita, following the system theme and accent. A single local SQLite file. Runs on any Linux desktop, no GNOME shell required, and on macOS through Homebrew.</p></div>
   </div>
 </section>
 
@@ -390,13 +388,13 @@ claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
     <h3>Can an AI assistant manage my to-do list?</h3>
     <p>Yes. Dagr runs a Model Context Protocol (MCP) server on localhost, so any MCP client — Claude Code, Claude Desktop, Cursor, Zed — can add, complete, re-prioritise, label and file your tasks. It is the same database the window uses, so changes show up in the open app within a second. Point your client at <code>http://127.0.0.1:7331/mcp</code>.</p>
     <h3>Which to-do apps have an MCP server built in?</h3>
-    <p>Very few. Most MCP task servers are wrappers around a cloud service such as Todoist or Notion, which means an account, an API key and your tasks on someone else's machine. Dagr is a native Linux desktop app whose own background service <em>is</em> the MCP server, over a local SQLite file.</p>
+    <p>Very few. Most MCP task servers are wrappers around a cloud service such as Todoist or Notion, which means an account, an API key and your tasks on someone else's machine. Dagr is a native desktop app for Linux and macOS whose own background service <em>is</em> the MCP server, over a local SQLite file.</p>
     <h3>Is my data private, and does it need an account?</h3>
     <p>No account, no cloud, no telemetry. Everything lives in one SQLite file at <code>~/.local/share/dagr/dagr.db</code>. The MCP endpoint is bound to localhost, has no authentication because nothing outside your machine can reach it, and can be switched off in Preferences.</p>
     <h3>How does it compare to Errands or GNOME To Do?</h3>
     <p>Dagr is smaller and deliberately narrower. It was inspired by Errands, and shares the GTK 4 and libadwaita look, but every action is one click and there are no due dates or sub-tasks. What it adds is the MCP server and a Unix socket, so assistants and your desktop launcher can drive it. Errands has CalDAV sync today; Dagr does not, yet.</p>
     <h3>Does it need GNOME?</h3>
-    <p>No. It is GTK 4 and libadwaita, so it follows your system light or dark style and accent colour, but it runs on any Linux desktop — it is developed on Hyprland. A Flatpak bundle is attached to every release.</p>
+    <p>No. It is GTK 4 and libadwaita, so it follows your system light or dark style and accent colour, but it runs on any Linux desktop — it is developed on Hyprland — and on macOS through Homebrew. One command installs it on either: the Flatpak bundle from the latest release, or the Homebrew formula.</p>
     <h3>Can I use it in Dutch?</h3>
     <p>Yes. Dagr ships English and Dutch, follows your system language, and takes an override in Preferences.</p>
   </div>
@@ -436,7 +434,7 @@ claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
       "name": "Which to-do apps have an MCP server built in?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Very few. Most MCP task servers are wrappers around a cloud service such as Todoist or Notion, which means an account, an API key and your tasks on someone else's machine. Dagr is a native Linux desktop app whose own background service is the MCP server, over a local SQLite file."
+        "text": "Very few. Most MCP task servers are wrappers around a cloud service such as Todoist or Notion, which means an account, an API key and your tasks on someone else's machine. Dagr is a native desktop app for Linux and macOS whose own background service is the MCP server, over a local SQLite file."
       }
     },
     {
@@ -460,7 +458,7 @@ claude mcp add --transport http dagr http://127.0.0.1:7331/mcp</pre>
       "name": "Does it need GNOME?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. It is GTK 4 and libadwaita, so it follows your system light or dark style and accent colour, but it runs on any Linux desktop — it is developed on Hyprland. A Flatpak bundle is attached to every release."
+        "text": "No. It is GTK 4 and libadwaita, so it follows your system light or dark style and accent colour, but it runs on any Linux desktop — it is developed on Hyprland — and on macOS through Homebrew. One command installs it on either: the Flatpak bundle from the latest release, or the Homebrew formula."
       }
     },
     {
