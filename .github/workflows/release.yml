@@ -18,6 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # The app reports Cargo.toml's version and the formula takes its version
+      # from the tag; a mismatch would ship a release that disagrees with itself.
+      - name: Tag matches Cargo.toml
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          [ "v${version}" = "${GITHUB_REF_NAME}" ] \
+            || { echo "::error::tag ${GITHUB_REF_NAME} does not match Cargo.toml version ${version}"; exit 1; }
+
       - name: Check vendored cargo sources are current
         run: |
           python3 build-aux/generate-cargo-sources.py -o /tmp/cargo-sources.json
@@ -37,3 +45,58 @@ jobs:
           files: dagr.flatpak
           fail_on_unmatched_files: true
           generate_release_notes: true
+
+  # Runs after the bundle, so a release that fails to build never reaches brew.
+  homebrew-tap:
+    name: Homebrew tap
+    needs: flatpak-bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Render the formula for this tag
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          url="https://github.com/${REPO}/archive/refs/tags/${TAG}.tar.gz"
+          sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+          sed -e "s|^  url \".*\"|  url \"${url}\"|" \
+              -e "s|^  sha256 \".*\"|  sha256 \"${sha}\"|" \
+              build-aux/homebrew/dagr.rb > dagr.rb
+          grep -q "sha256 \"${sha}\"" dagr.rb && grep -q "url \"${url}\"" dagr.rb \
+            || { echo "::error::the formula was not rendered"; exit 1; }
+          cat dagr.rb
+
+      - name: Attach the formula to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dagr.rb
+          fail_on_unmatched_files: true
+
+      # GITHUB_TOKEN cannot push to another repository, so this needs a token
+      # with contents:write on the tap. Without one the release still happens,
+      # with the formula attached, and the run says so.
+      - name: Publish to the tap
+        env:
+          TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAP: ${{ github.repository_owner }}/homebrew-tap
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::HOMEBREW_TAP_TOKEN is not set: dagr.rb is on the release, but ${TAP} was not updated"
+            exit 0
+          fi
+          git clone "https://x-access-token:${TOKEN}@github.com/${TAP}.git" tap
+          mkdir -p tap/Formula
+          cp dagr.rb tap/Formula/dagr.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/dagr.rb
+          if git diff --cached --quiet; then
+            echo "the tap already has this formula"
+            exit 0
+          fi
+          git commit -m "dagr ${TAG#v}"
+          git push

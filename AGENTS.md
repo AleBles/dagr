@@ -93,6 +93,19 @@ will fail:
 python3 build-aux/generate-cargo-sources.py
 ```
 
+## Releasing
+
+Bump `version` in `Cargo.toml`, then push a matching tag:
+
+```bash
+git tag v0.3.0 && git push origin v0.3.0
+```
+
+`.github/workflows/release.yml` refuses a tag that disagrees with `Cargo.toml`,
+builds the Flatpak bundle, and creates the GitHub release with it attached. It
+then renders `build-aux/homebrew/dagr.rb` for the tag, attaches that too, and
+pushes it to the tap — which needs the `HOMEBREW_TAP_TOKEN` secret.
+
 ## Style
 
 Comments explain *why*, not *what*, and this is the author's first Rust

@@ -3,8 +3,9 @@
 Notable changes to Dagr, newest first. Features only — the reasoning behind
 them lives in the commits.
 
-Nothing has been released yet, so everything below is unreleased; the dated
-headings are the points the work landed in the repository.
+Releases are tagged `vX.Y.Z` on GitHub, each with a Flatpak bundle attached and
+a Homebrew formula in `alebles/tap`. The dated headings mark when work landed;
+everything below it went out in the first tagged release, v0.2.0.
 
 ## 2026-09-23 — macOS
 

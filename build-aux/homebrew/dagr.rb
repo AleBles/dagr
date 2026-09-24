@@ -3,9 +3,9 @@
 #
 #   brew install alebles/tap/dagr
 #
-# After tagging a release, point `url` at its tarball and fill in `sha256`:
-#
-#   curl -sL https://github.com/alebles/dagr/archive/refs/tags/vX.Y.Z.tar.gz | shasum -a 256
+# This is a template: `url` and `sha256` below are placeholders. Pushing a
+# `vX.Y.Z` tag runs .github/workflows/release.yml, which fills both in for that
+# tag, attaches the result to the GitHub release and pushes it to the tap.
 class Dagr < Formula
   desc "Priority-ordered task list with a built-in MCP server"
   homepage "https://dagr.bles.nu"
